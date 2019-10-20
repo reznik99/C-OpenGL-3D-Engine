@@ -73,8 +73,6 @@ bool Camera::checkInputs(SDL_Event _event) {
 
 		angles[0] += yoffset * sensitivity;
 		angles[1] += xoffset * sensitivity;
-
-		std::cout << angles[0] << std::endl;
 	}
 	return false;
 }

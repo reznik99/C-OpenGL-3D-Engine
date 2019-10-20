@@ -8,7 +8,9 @@ class Entity
 {
 public:
 	Entity();
-	void load(std::vector<float>& _data, std::vector<unsigned int>& _indices);
+	void load(std::vector<float>& _data, std::vector<unsigned int>& _indices, std::vector<float>& _normals, 
+		glm::mat4* _modelMatrix);
+
 	int update();
 
 	unsigned int VAO = 0;

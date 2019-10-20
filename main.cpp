@@ -93,11 +93,12 @@ unsigned int createShaderProgram(const std::string & vertexShaderSource,
 	return 0;
 }
 
-void readOBJ(const char * filename) {
+void readOBJ(const char * filename, glm::mat4 modelMatrix) {
 	std::cout << "Reading...:  " << filename << std::endl;
 	
-	std::vector<float> vertices;
 	std::vector<unsigned int> indices;
+	std::vector<float> vertices;
+	std::vector<float> normals;
 
 	std::string s;
 	std::ifstream fin(filename);
@@ -106,11 +107,20 @@ void readOBJ(const char * filename) {
 	while (fin >> s) {
 		switch (*s.c_str()) {
 		case 'v': {
-			float x, y, z;
-			fin >> x >> y >> z;
-			vertices.push_back(x);
-			vertices.push_back(y);
-			vertices.push_back(z);
+			if (*(s.c_str() + 1) == 'n') {
+				float v1, v2, v3;
+				fin >> v1 >> v2 >> v3;
+				normals.push_back(v1);
+				normals.push_back(v2);
+				normals.push_back(v3);
+			}
+			else {
+				float x, y, z;
+				fin >> x >> y >> z;
+				vertices.push_back(x);
+				vertices.push_back(y);
+				vertices.push_back(z);
+			}
 		}
 		break;
 		case 'f': {
@@ -125,7 +135,7 @@ void readOBJ(const char * filename) {
 	}
 
 	Entity newEntity;
-	newEntity.load(vertices, indices);
+	newEntity.load(vertices, indices, normals, &modelMatrix);
 
 	entities.push_back(newEntity);
 }
@@ -136,18 +146,31 @@ void init() {
 										uniform mat4 projMatrix; \
 										uniform mat4 viewMatrix; \
 										uniform mat4 modelMatrix; \
-										layout (location = 0) in vec3 vertex; \
-										out vec3 vertex_pos; \
-										void main() { gl_Position = projMatrix * viewMatrix * modelMatrix * vec4(vertex,1.0); vertex_pos = vertex;}";
+										uniform vec3 lightPosition; \
+										layout (location = 1) in vec3 vertex; \
+										layout (location = 2) in vec3 normal; \
+										out vec3 toLightVector; \
+										out vec3 surfaceNormal; \
+										void main() { \
+											vec4 worldPosition = modelMatrix * vec4(vertex, 1.0); \
+											gl_Position = projMatrix * viewMatrix * worldPosition; \
+											surfaceNormal = (modelMatrix * vec4(normal, 0.0)).xyz; \
+											toLightVector = lightPosition - worldPosition.xyz;}";
 
-	std::string _fragmentShaderSource = "in vec3 vertex_pos; \
+	std::string _fragmentShaderSource = "in vec3 surfaceNormal; \
+										in vec3 toLightVector; \
 										void main() {		\
-											vec3 vertexCol = (vertex_pos.xyz + 1) / 2; \
-											gl_FragColor = vec4(vertexCol, 1.0); }";
+											float nDotl = dot(normalize(surfaceNormal), normalize(toLightVector));\
+											gl_FragColor = vec4(max(nDotl, 0.2), max(nDotl, 0.2), max(nDotl, 0.2), 1.0); }";
 
 	g_programId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource);
+
 	//local url doesn't work for now
-	readOBJ("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/teapot.obj");
+	//readOBJ("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/teapot.obj", glm::mat4(1));
+
+	glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(0, 0, 0));
+	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.005));
+	readOBJ("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/elepham.obj", tempModelMatrix);
 
 	std::cout << "Program ID: " << g_programId << std::endl;
 }
@@ -158,8 +181,10 @@ void render() {
 	//load uniforms (same for all obj's)
 	int projMatrixId = glGetUniformLocation(g_programId, "projMatrix");
 	int viewMatrixId = glGetUniformLocation(g_programId, "viewMatrix");
+	int lightPositionId = glGetUniformLocation(g_programId, "lightPosition");
 	glUniformMatrix4fv(projMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
 	glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &camera.getViewMatrix()[0][0]);
+	glUniformMatrix4fv(lightPositionId, 1, GL_FALSE, &glm::vec3(5.0f, 20.0f, 0.0f)[0]);
 
 	for (int i = 0; i < entities.size(); i++) {
 		Entity obj = entities[i];
@@ -173,7 +198,7 @@ void render() {
 		//unbind
 		glBindVertexArray(0);
 
-		obj.modelMatrix = glm::rotate(obj.modelMatrix, 3.14f / 200, glm::vec3(0, 1.0, 0));
+		//obj.modelMatrix = glm::rotate(obj.modelMatrix, 3.14f / 200, glm::vec3(0, 1.0, 0));
 	}
 	
 	glUseProgram(0);
