@@ -8,24 +8,21 @@
 #include <GL/glew.h>
 #include <GL/GL.h>
 #include <Entity.h>
+#include <Camera.h>
 
 #undef main
 
 //globals
 unsigned int width = 1280, height = 720;
+float FOV = 75.0f;
 unsigned int g_programId = 0;
 unsigned int g_vertexShaderId = 0, g_fragmentShaderId = 0;
 
 std::vector<Entity> entities;
 
-glm::mat4 projectionMatrix = glm::perspective(glm::radians(90.0f), (float)width / (float)height, 0.1f, 100.0f); // 90° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+glm::mat4 projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 100.0f); // 90° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 
-// Camera matrix
-glm::mat4 viewMatrix = glm::lookAt(
-	glm::vec3(0, 1, 4), // Camera is in World Space
-	glm::vec3(0, 1, 0), // and looks at the origin
-	glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
-);
+Camera camera(glm::vec3(0, 2, 6), glm::vec3(0, 270, -180));
 
 unsigned int createShader(unsigned int type, const std::string& source) {
 	unsigned int _id = glCreateShader(type);
@@ -96,7 +93,6 @@ unsigned int createShaderProgram(const std::string & vertexShaderSource,
 	return 0;
 }
 
-
 void readOBJ(const char * filename) {
 	std::cout << "Reading...:  " << filename << std::endl;
 	
@@ -163,7 +159,7 @@ void render() {
 	int projMatrixId = glGetUniformLocation(g_programId, "projMatrix");
 	int viewMatrixId = glGetUniformLocation(g_programId, "viewMatrix");
 	glUniformMatrix4fv(projMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
-	glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &viewMatrix[0][0]);
+	glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &camera.getViewMatrix()[0][0]);
 
 	for (int i = 0; i < entities.size(); i++) {
 		Entity obj = entities[i];
@@ -207,31 +203,6 @@ void cleanUp(SDL_Window* _window, SDL_GLContext _context) {
 	SDL_GL_DeleteContext(_context);
 }
 
-bool handleUserInput(SDL_Event &_event) {
-	if (_event.type == SDL_QUIT)
-		return true;
-	if (_event.type == SDL_KEYDOWN) {
-		switch (_event.key.keysym.sym) {
-		case SDLK_w:
-			viewMatrix = glm::translate(viewMatrix, glm::vec3(0, 0, 0.1));
-			break;
-		case SDLK_a:
-			viewMatrix = glm::translate(viewMatrix, glm::vec3(0.1, 0, 0));
-			break;
-		case SDLK_s:
-			viewMatrix = glm::translate(viewMatrix, glm::vec3(0, 0, -0.1));
-			break;
-		case SDLK_d:
-			viewMatrix = glm::translate(viewMatrix, glm::vec3(-0.1, 0, 0));
-			break;
-		case SDLK_ESCAPE:
-			return true;
-			break;
-		}
-	}
-	return false;
-}
-
 int main() {
 	//set up window
 	SDL_Window* _window = SDL_CreateWindow("OpenGL Engine", 
@@ -252,11 +223,13 @@ int main() {
 
 		//handle user events
 		while (SDL_PollEvent(&_event))
-			if (handleUserInput(_event)) _break = true;
+			if (camera.checkInputs(_event)) _break = true;
 
 		//update entities
 		for (Entity e : entities) 
 			e.update();
+
+		camera.update();
 
 		//display
 		display();
