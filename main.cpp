@@ -9,6 +9,7 @@
 #include <GL/GL.h>
 #include <Entity.h>
 #include <Camera.h>
+#include "main.h"
 
 #undef main
 
@@ -23,6 +24,8 @@ std::vector<Entity> entities;
 glm::mat4 projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 100.0f); // 90° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 
 Camera camera(glm::vec3(0, 2, 6), glm::vec3(0, 270, -180));
+
+glm::vec3 g_light(25.0f, 100.0f, 0.0f);
 
 unsigned int createShader(unsigned int type, const std::string& source) {
 	unsigned int _id = glCreateShader(type);
@@ -99,6 +102,7 @@ void readOBJ(const char * filename, glm::mat4 modelMatrix) {
 	std::vector<unsigned int> indices;
 	std::vector<float> vertices;
 	std::vector<float> normals;
+	std::vector<unsigned int> normalIndices;
 
 	std::string s;
 	std::ifstream fin(filename);
@@ -126,19 +130,36 @@ void readOBJ(const char * filename, glm::mat4 modelMatrix) {
 		}
 		break;
 		case 'f': {
-			int v1, v2, v3;
-			fin >> v1 >> v2 >> v3;
+			unsigned int v1, n1, v2, n2, v3, n3;
+			fin >> v1 >> n1 >> v2 >> n2 >> v3 >> n3;
 			indices.push_back(v1 - 1);
 			indices.push_back(v2 - 1);
 			indices.push_back(v3 - 1);
+			normalIndices.push_back(n1 - 1);
+			normalIndices.push_back(n2 - 1);
+			normalIndices.push_back(n3 - 1);
 		}
 		break;
 		}
 	}
+	int size = normalIndices.size();
+	float* orderedNormals = new float[size];
 
-	std::cout << "Loaded: " << vertices.size() << " " << indices.size() << " " << normals.size() << " " << std::endl;
+	for (int i = 0; i < size; i++) {
+		int currentVertexPointer = indices[i];
+		int currentNormalPointer = normalIndices[i];
+		orderedNormals[currentVertexPointer * 3] = normals[currentNormalPointer * 3];
+		orderedNormals[currentVertexPointer * 3 + 1] = normals[currentNormalPointer * 3 + 1];
+		orderedNormals[currentVertexPointer * 3 + 2] = normals[currentNormalPointer * 3 + 2];
+	}
+
+	std::vector<float> finalNormals(orderedNormals, orderedNormals + size);
+
+	delete[] orderedNormals;
+
+	std::cout << "Loaded: " << vertices.size() << " " << indices.size() << " " << normals.size() << " " << finalNormals.size() << std::endl;
 	Entity newEntity;
-	newEntity.load(vertices, indices, normals, &modelMatrix);
+	newEntity.load(vertices, indices, finalNormals, &modelMatrix);
 	
 	entities.push_back(newEntity);
 }
@@ -164,7 +185,8 @@ void init() {
 										in vec3 toLightVector; \
 										void main() {		\
 											float nDotl = dot(normalize(surfaceNormal), normalize(toLightVector));\
-											gl_FragColor = vec4(max(nDotl, 0.2), max(nDotl, 0.2), max(nDotl, 0.2), 1.0); }";
+											float brightness = max(nDotl, 0.2);\
+											gl_FragColor = vec4(brightness, brightness, brightness, 1.0); }";
 
 	g_programId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource);
 
@@ -173,7 +195,7 @@ void init() {
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3));
 	readOBJ("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/Palm2LowPoly.obj", tempModelMatrix);
 
-	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(0, 0, 0));
+	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, 0, 10));
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.005));
 	readOBJ("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/elepham.obj", tempModelMatrix);
 
@@ -189,7 +211,7 @@ void render() {
 	int lightPositionId = glGetUniformLocation(g_programId, "lightPosition");
 	glUniformMatrix4fv(projMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
 	glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &camera.getViewMatrix()[0][0]);
-	glUniformMatrix4fv(lightPositionId, 1, GL_FALSE, &glm::vec3(5.0f, 20.0f, 0.0f)[0]);
+	glUniform3f(lightPositionId, g_light[0], g_light[1], g_light[2]);
 
 	for (int i = 0; i < entities.size(); i++) {
 		Entity obj = entities[i];
@@ -210,6 +232,9 @@ void render() {
 }
 
 void display() {
+	float _t = SDL_GetTicks() / 1000.0f; //seconds
+	g_light += glm::vec3(sin(_t), 0, cos(_t));
+
 	//clear buffers
 	glClearColor(0.2, 0.4, 0.6, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);

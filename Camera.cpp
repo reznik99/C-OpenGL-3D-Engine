@@ -25,7 +25,7 @@ void Camera::update() {
 		this->position -= right * speed;
 	}
 
-	this->position[1] = 1; //keep player level on ground
+	//this->position[1] = 1; //keep player level on ground
 }
 
 bool Camera::checkInputs(SDL_Event _event) {
@@ -92,5 +92,9 @@ glm::vec3 Camera::getFront() {
 glm::mat4 Camera::getViewMatrix() {
 	glm::vec3 front = getFront();
 	return glm::lookAt(position, position + front, glm::vec3(0, 1, 0));
+}
+
+glm::vec3 Camera::getPosition() {
+	return this->position;
 }
 

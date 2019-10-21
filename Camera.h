@@ -18,6 +18,8 @@ public:
 
 	glm::mat4 getViewMatrix();
 
+	glm::vec3 getPosition();
+
 	bool moveForward;
 	bool moveRight;
 	bool moveBackwards;

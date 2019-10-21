@@ -23,7 +23,6 @@ void Entity::load(std::vector<float>& _data, std::vector<unsigned int>& _indices
 
 	glBindVertexArray(0); //unbind
 	indexBufferSize = _indices.size();
-	std::cout << "VAO: " << VAO << std::endl;
 
 	if(_modelMatrix == NULL)
 		this->modelMatrix = glm::mat4(1.0f); //default model matrix
