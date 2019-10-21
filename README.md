@@ -6,6 +6,11 @@
 > C++ was chosen to see if preformance would be better than my other project GEngine3D using Java & LWJGL
 > I chose openGL because of previous experience with it.
 
+<p float="left" align="center">
+  <img src="readmeSrc/1.PNG" width="45%" />
+  <img src="readmeSrc/1.PNG" width="45%" />
+</p>
+
 
 Implemented:
 * Simple 3D rendering pipeline
