@@ -113,6 +113,8 @@ void readOBJ(const char * filename, glm::mat4 modelMatrix) {
 				normals.push_back(v1);
 				normals.push_back(v2);
 				normals.push_back(v3);
+			}else if (*(s.c_str() + 1) == 't') {
+				//not implemented
 			}
 			else {
 				float x, y, z;
@@ -134,9 +136,10 @@ void readOBJ(const char * filename, glm::mat4 modelMatrix) {
 		}
 	}
 
+	std::cout << "Loaded: " << vertices.size() << " " << indices.size() << " " << normals.size() << " " << std::endl;
 	Entity newEntity;
 	newEntity.load(vertices, indices, normals, &modelMatrix);
-
+	
 	entities.push_back(newEntity);
 }
 
@@ -147,8 +150,8 @@ void init() {
 										uniform mat4 viewMatrix; \
 										uniform mat4 modelMatrix; \
 										uniform vec3 lightPosition; \
-										layout (location = 1) in vec3 vertex; \
-										layout (location = 2) in vec3 normal; \
+										in vec3 vertex; \
+										in vec3 normal; \
 										out vec3 toLightVector; \
 										out vec3 surfaceNormal; \
 										void main() { \
@@ -166,9 +169,11 @@ void init() {
 	g_programId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource);
 
 	//local url doesn't work for now
-	//readOBJ("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/teapot.obj", glm::mat4(1));
+	glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(4, 0, 1));
+	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3));
+	readOBJ("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/Palm2LowPoly.obj", tempModelMatrix);
 
-	glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(0, 0, 0));
+	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(0, 0, 0));
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.005));
 	readOBJ("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/elepham.obj", tempModelMatrix);
 

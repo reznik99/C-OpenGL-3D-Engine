@@ -16,16 +16,17 @@ void Entity::load(std::vector<float>& _data, std::vector<unsigned int>& _indices
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(unsigned int), &_indices[0], GL_STATIC_DRAW); //STREAM_DRAW and DYNAMIC_DRAW
 	//vertices
-	Entity::storeDataInAttributeList(1, 3, _data);
+	Entity::storeDataInAttributeList(0, 3, _data);
 	//normals
-	Entity::storeDataInAttributeList(2, 3, _normals);
+	Entity::storeDataInAttributeList(1, 3, _normals);
 
 
 	glBindVertexArray(0); //unbind
 	indexBufferSize = _indices.size();
+	std::cout << "VAO: " << VAO << std::endl;
 
 	if(_modelMatrix == NULL)
-		modelMatrix = glm::mat4(1.0f); //default model matrix
+		this->modelMatrix = glm::mat4(1.0f); //default model matrix
 	else
 		this->modelMatrix = *_modelMatrix;
 
