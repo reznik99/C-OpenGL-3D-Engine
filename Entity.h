@@ -13,6 +13,8 @@ public:
 
 	int update();
 
+	static void storeDataInAttributeList(int attributeNumber, int coordinateSize, std::vector<float>& _data);
+
 	unsigned int VAO = 0;
 	unsigned int indexBufferSize = 0;
 	glm::mat4 modelMatrix;
