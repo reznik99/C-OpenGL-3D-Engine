@@ -4,7 +4,8 @@
 Entity::Entity() {
 	modelMatrix = glm::mat4(1.0f);
 }
-void Entity::load(std::vector<float>& _data, std::vector<unsigned int>& _indices, std::vector<float>& _normals, glm::mat4 *_modelMatrix) {
+void Entity::load(std::vector<float>& _data, std::vector<unsigned int>& _indices, std::vector<float>& _normals, 
+	std::vector<float>& _texCoords, glm::mat4 *_modelMatrix, unsigned int textureId) {
 
 	unsigned int _indexBufferId = 0;
 	// create VAO
@@ -19,6 +20,8 @@ void Entity::load(std::vector<float>& _data, std::vector<unsigned int>& _indices
 	Entity::storeDataInAttributeList(0, 3, _data);
 	//normals
 	Entity::storeDataInAttributeList(1, 3, _normals);
+	//textureCoords
+	Entity::storeDataInAttributeList(2, 2, _texCoords);
 
 
 	glBindVertexArray(0); //unbind
@@ -29,10 +32,13 @@ void Entity::load(std::vector<float>& _data, std::vector<unsigned int>& _indices
 	else
 		this->modelMatrix = *_modelMatrix;
 
+	this->textureId = textureId;
+
 	std::cout << "VAO: " << VAO << std::endl;
 	std::cout << "Indices: " << _indices.size() << std::endl;
 	std::cout << "Vertices: " << _data.size() << std::endl;
 	std::cout << "Normals: " << _normals.size() << std::endl;
+	std::cout << "textureCoords: " << _texCoords.size() << std::endl;
 }
 
 int Entity::update() {

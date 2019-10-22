@@ -8,6 +8,9 @@ Camera::Camera(glm::vec3 pos, glm::vec3 angles) {
 	moveRight = false;
 	moveBackwards = false;
 	moveLeft = false;
+
+	this->prevMouseX = -1;
+	this->prevMouseY = -1;
 }
 
 void Camera::update() {
@@ -59,7 +62,7 @@ bool Camera::checkInputs(SDL_Event _event) {
 	}
 	//mouse movement
 	if (_event.type == SDL_MOUSEMOTION) {
-		if (!prevMouseX) { //if mouse just moved into window
+		if (prevMouseX == -1) { //if mouse just moved into window
 			prevMouseX = _event.motion.x;
 			prevMouseY = _event.motion.y;
 			return false;
