@@ -9,23 +9,23 @@
 #include <GL/GL.h>
 #include <Entity.h>
 #include <Camera.h>
-#include "main.h"
 
 #undef main
 
 //globals
-unsigned int width = 1280, height = 720;
-float FOV = 75.0f;
-unsigned int g_programId = 0;
-unsigned int g_vertexShaderId = 0, g_fragmentShaderId = 0;
+const unsigned int width = 1280, height = 720;
+const float FOV = 75.0f;
+const int FPS = 60;
+const int frameDelay = 1000 / FPS;
+
+unsigned int g_programId = 0, g_vertexShaderId = 0, g_fragmentShaderId = 0;
 
 std::vector<Entity> entities;
 
-glm::mat4 projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 100.0f); // 90° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-
+// 90° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+glm::mat4 projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 100.0f);
 Camera camera(glm::vec3(0, 2, 6), glm::vec3(0, 270, -180));
-
-glm::vec3 g_light(25.0f, 100.0f, 0.0f);
+glm::vec3 g_light(25.0f, 20.0f, 0.0f);
 
 unsigned int createShader(unsigned int type, const std::string& source) {
 	unsigned int _id = glCreateShader(type);
@@ -215,7 +215,7 @@ void render() {
 
 	for (int i = 0; i < entities.size(); i++) {
 		Entity obj = entities[i];
-		//load uniforms (same for all obj's)
+		//load uniform for model matrix
 		int modelMatrixId = glGetUniformLocation(g_programId, "modelMatrix");
 		glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj.modelMatrix[0][0]);
 		//bind vao
@@ -224,14 +224,13 @@ void render() {
 		glDrawElements(GL_TRIANGLES, obj.indexBufferSize, GL_UNSIGNED_INT, 0);
 		//unbind
 		glBindVertexArray(0);
-
-		//obj.modelMatrix = glm::rotate(obj.modelMatrix, 3.14f / 200, glm::vec3(0, 1.0, 0));
 	}
 	
 	glUseProgram(0);
 }
 
 void display() {
+	//animate sun
 	float _t = SDL_GetTicks() / 1000.0f; //seconds
 	g_light += glm::vec3(sin(_t), 0, cos(_t));
 
@@ -272,9 +271,15 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
+	//framerate control
+	Uint32 frameStart;
+	int frameTime;
+
 	//main loop
 	while (1) {
 		bool _break = false;
+
+		frameStart = SDL_GetTicks();
 
 		//handle user events
 		while (SDL_PollEvent(&_event))
@@ -288,10 +293,11 @@ int main() {
 
 		//display
 		display();
-
-		//sleep (should check frametime)
-		SDL_Delay(10);
 		SDL_GL_SwapWindow(_window);
+
+		frameTime = SDL_GetTicks() - frameStart;
+		if (frameDelay > frameTime)
+			SDL_Delay(frameDelay - frameTime);
 
 		if (_break) break;
 	}

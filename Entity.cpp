@@ -8,7 +8,7 @@ void Entity::load(std::vector<float>& _data, std::vector<unsigned int>& _indices
 
 	unsigned int _indexBufferId = 0;
 	// create VAO
-	glGenVertexArrays(3, &VAO); //size
+	glGenVertexArrays(1, &VAO); //size
 	glBindVertexArray(VAO);	// bind the Vertex Array Object first, then bind and set VBO's, and then configure vertex attributes(s).
 
 	//indices
