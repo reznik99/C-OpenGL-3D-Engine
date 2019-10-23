@@ -1,3 +1,4 @@
+#pragma warning(disable:4996)
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -10,8 +11,10 @@
 #include <Entity.h>
 #include <Camera.h>
 #include <STB/stb_image.h>
+#include "Loader.h"
 
 #undef main
+
 
 //globals
 const unsigned int width = 1280, height = 720;
@@ -97,118 +100,10 @@ unsigned int createShaderProgram(const std::string & vertexShaderSource,
 	return 0;
 }
 
-void readOBJ(const char * filename, const char* textureFile, glm::mat4 modelMatrix) {
-	std::cout << "Reading...:  " << filename << std::endl;
-	
-	std::vector<unsigned int> indices;
-	std::vector<float> vertices;
-	std::vector<float> normals;
-	std::vector<unsigned int> normalIndices;
-	std::vector<float> textureCoords;
-	std::vector<unsigned int> textureIndices;
+void loadEntity(const char * filename, const char* textureFile, glm::mat4 modelMatrix) {
+	Entity newEntity = *readOBJ_better(filename, textureFile, modelMatrix);
 
-	std::string s;
-	std::ifstream fin(filename);
-	if (!fin) return;
-
-	while (fin >> s) {
-		switch (*s.c_str()) {
-		case 'v': {
-			if (*(s.c_str() + 1) == 'n') {
-				float v1, v2, v3;
-				fin >> v1 >> v2 >> v3;
-				normals.push_back(v1);
-				normals.push_back(v2);
-				normals.push_back(v3);
-			}else if (*(s.c_str() + 1) == 't') {
-				float texX, texY;
-				fin >> texX >> texY;
-				textureCoords.push_back(texX);
-				textureCoords.push_back(texY);
-			}
-			else {
-				float x, y, z;
-				fin >> x >> y >> z;
-				vertices.push_back(x);
-				vertices.push_back(y);
-				vertices.push_back(z);
-			}
-		}
-		break;
-		case 'f': {
-			unsigned int v1, t1, n1, v2, t2, n2, v3, t3, n3;
-			fin >> v1 >> t1 >> n1 >> v2 >> t2 >> n2 >> v3 >> t3 >> n3;
-			indices.push_back(v1 - 1);
-			indices.push_back(v2 - 1);
-			indices.push_back(v3 - 1);
-
-			textureIndices.push_back(t1 - 1);
-			textureIndices.push_back(t2 - 1);
-			textureIndices.push_back(t3 - 1);
-
-			normalIndices.push_back(n1 - 1);
-			normalIndices.push_back(n2 - 1);
-			normalIndices.push_back(n3 - 1);
-		}
-		break;
-		}
-	}
-
-	int size = normalIndices.size();
-
-	float* orderedNormals = new float[size];
-	float* orderedTextureCoords = new float[size];
-
-	for (int i = 0; i < size; i++) {
-		int currentVertexPointer = indices[i];
-		int currentNormalPointer = normalIndices[i];
-		orderedNormals[currentVertexPointer * 3] = normals[currentNormalPointer * 3];
-		orderedNormals[currentVertexPointer * 3 + 1] = normals[currentNormalPointer * 3 + 1];
-		orderedNormals[currentVertexPointer * 3 + 2] = normals[currentNormalPointer * 3 + 2];
-		int currentTexturePointer = textureIndices[i];
-		orderedTextureCoords[currentVertexPointer * 2] = textureCoords[currentTexturePointer * 2];
-		orderedTextureCoords[currentVertexPointer * 2 + 1] = textureCoords[currentTexturePointer * 2 + 1];
-	}
-
-	std::cout << "orderedNormals: " << orderedNormals[0] << std::endl;
-
-	std::vector<float> finalNormals(orderedNormals, orderedNormals + size);
-	std::vector<float> finalTextureCoords(orderedTextureCoords, orderedTextureCoords + size);
-
-	delete[] orderedNormals;
-	delete[] orderedTextureCoords;
-
-	std::cout << "Parsed obj successfully." << std::endl;
-
-	//temp texture stuff
-	unsigned int textureId;
-	glGenTextures(1, &textureId);
-	glBindTexture(GL_TEXTURE_2D, textureId);
-	// set the texture wrapping/filtering options (on the currently bound texture object)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// load and generate the texture
-	int width, height, nrChannels;
-	unsigned char* data = stbi_load(textureFile, &width, &height, &nrChannels, 0);
-	if (data) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else {
-		std::cout << "Failed to load texture" << std::endl;
-	}
-	stbi_image_free(data);
-
-	std::cout << "Loaded texture" << std::endl;
-
-	Entity newEntity;
-	newEntity.load(vertices, indices, finalNormals, finalTextureCoords, &modelMatrix, textureId);
-	
 	entities.push_back(newEntity);
-
-	std::cout << "Loaded Entity successfully" << std::endl;
 }
 
 void init() {
@@ -238,18 +133,24 @@ void init() {
 										void main() {		\
 											float nDotl = dot(normalize(surfaceNormal), normalize(toLightVector));\
 											float brightness = max(nDotl, 0.2);\
-											gl_FragColor = texture(tex, texCoords); }"; //vec4(brightness, brightness, brightness, 1.0)
+											gl_FragColor = mix(vec4(brightness, brightness, brightness, 1.0), texture2D(tex, texCoords), 0.5); \
+											 }"; //gl_FragColor = vec4(texCoords.x, texCoords.y, 0, 1.0);
 
 	g_programId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource);
 
-	//local url doesn't work for now
+	
+	//LOAD game Entity's textures and ViewMatrix
 	glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(4, 0, 1));
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
-	readOBJ("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/Palm2LowPoly.obj", "E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/palm2.jpg", tempModelMatrix);
+	loadEntity("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/house.obj", "E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/house.png", tempModelMatrix);
 
 	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, 0, 10));
-	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.005f));
-	//readOBJ("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/elepham.obj", "E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/tex2.jpg", tempModelMatrix);
+	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
+	//loadEntity("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/Palm2LowPoly.obj", "E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/Palm2.png", tempModelMatrix);
+
+	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, 0, 5));
+	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.1f));
+	//loadEntity("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/well.obj", "E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/well3.png", tempModelMatrix);
 
 	std::cout << "Program ID: " << g_programId << std::endl;
 }
@@ -266,16 +167,16 @@ void render() {
 	glUniform3f(lightPositionId, g_light[0], g_light[1], g_light[2]);
 
 	for (unsigned int i = 0; i < entities.size(); i++) {
-		Entity obj = entities[i];
+		Entity* obj = &entities[i];
 		//load uniform for model matrix
 		int modelMatrixId = glGetUniformLocation(g_programId, "modelMatrix");
-		glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj.modelMatrix[0][0]);
+		glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj->modelMatrix[0][0]);
 		//bind texture
-		glBindTexture(GL_TEXTURE_2D, obj.textureId);
+		glBindTexture(GL_TEXTURE_2D, obj->textureId);
 		//bind vao
-		glBindVertexArray(obj.VAO);
+		glBindVertexArray(obj->VAO);
 		//render
-		glDrawElements(GL_TRIANGLES, obj.indexBufferSize, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
 		//unbind
 		glBindVertexArray(0);
 	}
@@ -298,9 +199,10 @@ void display() {
 }
 
 void cleanUp(SDL_Window* _window, SDL_GLContext _context) {
-	//unload buffers
-	//glDeleteBuffers(1, &g_bufferId);
-	//glDeleteBuffers(1, &g_indexBufferId);
+	//unload entities
+	for (Entity e : entities) {
+
+	}
 	//delete shaders
 	glDeleteShader(g_vertexShaderId);
 	glDeleteShader(g_fragmentShaderId);

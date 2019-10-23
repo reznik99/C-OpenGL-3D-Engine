@@ -1,10 +1,7 @@
 
 #include "Entity.h"
 
-Entity::Entity() {
-	modelMatrix = glm::mat4(1.0f);
-}
-void Entity::load(std::vector<float>& _data, std::vector<unsigned int>& _indices, std::vector<float>& _normals, 
+Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, std::vector<float>& _normals,
 	std::vector<float>& _texCoords, glm::mat4 *_modelMatrix, unsigned int textureId) {
 
 	unsigned int _indexBufferId = 0;
