@@ -38,7 +38,6 @@ Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMa
 	std::vector < float > textureCoords;
 
 	unsigned int vertexCount = 0;
-	unsigned int called = 0;
 
 	std::ifstream file(filename);
 	std::string str;
@@ -47,7 +46,7 @@ Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMa
 	while (std::getline(file, str)) {
 		const char* lineHeader = str.c_str();
 
-		if (str.rfind("vt ", 0) == 0) { called++;
+		if (str.rfind("vt ", 0) == 0) {
 			float texX, texY;
 			sscanf_s(lineHeader, "vt %f %f\n", &texX, &texY);
 			textureCoords.push_back(texX);
@@ -71,10 +70,9 @@ Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMa
 			unsigned int v1, t1, n1, v2, t2, n2, v3, t3, n3;
 			int count = sscanf_s(lineHeader, "f %d/%d/%d %d/%d/%d %d/%d/%d\n", &v1, &t1, &n1, &
 				v2, &t2, &n2, &v3, &t3, &n3);
-			if (count != 9) {
+			if (count != 9)
 				std::cout << "Invalid OBJ format" << std::endl;
-				//printf("%s", lineHeader);
-			}
+
 			indices.push_back(v1 - 1);
 			indices.push_back(v2 - 1);
 			indices.push_back(v3 - 1);
@@ -89,27 +87,45 @@ Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMa
 		}
 	}
 
-	std::vector < float > orderedNormals, orderedTextureCoords;
-
-	for (unsigned int i = 0; i < indices.size(); i++) {
-		unsigned int currentVertexPointer = indices[i];
-		unsigned int currentNormalPointer = normalIndices[i];
-		unsigned int currentTexturePointer = textureIndices[i];
-		//Normals
-		orderedNormals.insert(orderedNormals.begin() + (currentVertexPointer * 3), normals[currentNormalPointer * 3]);
-		orderedNormals.insert(orderedNormals.begin() + (currentVertexPointer * 3 + 1), normals[currentNormalPointer * 3 + 1]);
-		orderedNormals.insert(orderedNormals.begin() + (currentVertexPointer * 3 + 2), normals[currentNormalPointer * 3 + 2]);
-		//UVs
-		orderedTextureCoords.insert(orderedTextureCoords.begin() + (currentVertexPointer * 2), textureCoords[currentTexturePointer * 2]);
-		orderedTextureCoords.insert(orderedTextureCoords.begin() + (currentVertexPointer * 2 + 1), textureCoords[currentTexturePointer * 2 + 1]);
-	}
-
 	std::cout << "Parsed obj successfully." << std::endl;
+
+	//Code to sort attributes according to indices (not fully working, to be used with glDrawArrays())
+	/*
+	int indicesSize = indices.size();
+	std::vector < float > normalsOut;
+	std::vector < float > textureCoordsOut;
+	normalsOut.resize(indices.size());
+	textureCoordsOut.resize(indices.size());
+
+	for (int i = 0; i < indicesSize; i++) {
+		int vertPointer = indices.at(i);
+		int normPointer = normalIndices.at(i);
+		int texPointer = textureIndices.at(i);
+		//if already set, duplicate vertex
+		if (normalsOut[i] || textureCoordsOut[i]) {
+			//update current vertPointer
+			int oldVertPointer = vertPointer;
+			vertPointer = vertices.size() / 3;
+			//add new vertex
+			vertices.push_back(vertices[oldVertPointer * 3]);
+			vertices.push_back(vertices[oldVertPointer * 3 + 1]);
+			vertices.push_back(vertices[oldVertPointer * 3 + 2]);
+		}
+		//Normal
+		normalsOut.insert(normalsOut.begin() + vertPointer * 3, normals[normPointer * 3]);
+		normalsOut.insert(normalsOut.begin() + vertPointer * 3 + 1, normals[normPointer * 3 + 1]);
+		normalsOut.insert(normalsOut.begin() + vertPointer * 3 + 2, normals[normPointer * 3 + 2]);
+		//UV
+		textureCoordsOut.insert(textureCoordsOut.begin() + vertPointer * 2, textureCoords[texPointer * 2]);
+		textureCoordsOut.insert(textureCoordsOut.begin() + vertPointer * 2 + 1, textureCoords[texPointer * 2 + 1]);
+	}*/
+
+	std::cout << "UVs and Normals sorted successfully" << std::endl;
 
 	//load texture into opengl
 	unsigned int textureId = loadTexture(textureFile);
 	//save Id's to Entity
-	Entity *newEntity = new Entity(vertices, indices, orderedNormals, orderedTextureCoords, &modelMatrix, textureId);
+	Entity *newEntity = new Entity(vertices, indices, normals, textureCoords, &modelMatrix, textureId);
 
 	std::cout << "Loaded Entity successfully" << std::endl;
 

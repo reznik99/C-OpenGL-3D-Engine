@@ -108,13 +108,11 @@ void loadEntity(const char * filename, const char* textureFile, glm::mat4 modelM
 }
 
 void init() {
-	
 	std::string _vertexShaderSource = readShader("shaders/vertexShaderEntities.txt");
 	std::string _fragmentShaderSource = readShader("shaders/fragmentShaderEntities.txt");
 
 	g_programId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource);
 
-	
 	//load game Entities
 	glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(4, 0, 1));
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
@@ -122,7 +120,7 @@ void init() {
 
 	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, 0, 10));
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
-	//loadEntity("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/Palm2LowPoly.obj", "E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/Palm2.png", tempModelMatrix);
+	loadEntity("../Debug/Palm2LowPoly.obj", "../Debug/Palm2.png", tempModelMatrix);
 
 	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, 0, 5));
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.1f));
@@ -156,6 +154,11 @@ void render() {
 		glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
 		//unbind
 		glBindVertexArray(0);
+
+		/*glBindBuffer(GL_ARRAY_BUFFER, obj->vertVBOId);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glDrawArrays(GL_TRIANGLES, 0, obj->indexBufferSize);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);*/
 	}
 	
 	glUseProgram(0);
@@ -164,7 +167,8 @@ void render() {
 void display() {
 	//animate sun
 	float _t = SDL_GetTicks() / 1000.0f; //seconds
-	g_light += glm::vec3(sin(_t), 0, cos(_t));
+	//g_light += glm::vec3(sin(_t), 0, cos(_t));
+	g_light = camera.getPosition();
 
 	//clear buffers
 	glClearColor(0.2f, 0.4f, 0.6f, 1.0f);

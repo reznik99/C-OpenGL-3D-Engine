@@ -9,6 +9,7 @@
 #include <GL\glew.h>
 #include <STB\stb_image.h>
 #include <Entity.h>
+#include <map>
 
 
 unsigned int loadTexture(const char* textureFile);

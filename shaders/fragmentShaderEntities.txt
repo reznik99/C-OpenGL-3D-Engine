@@ -3,8 +3,10 @@ in vec3 surfaceNormal;
 in vec3 toLightVector;
 in vec2 texCoords;
 uniform sampler2D tex;
+
+float ambientLighting = 0.1;
 void main() {
 	float nDotl = dot(normalize(surfaceNormal), normalize(toLightVector));
-	float brightness = max(nDotl, 0.2);
+	float brightness = max(nDotl, ambientLighting);
 	gl_FragColor = mix(vec4(brightness, brightness, brightness, 1.0), texture2D(tex, texCoords), 0.5); //gl_FragColor = vec4(texCoords.x, texCoords.y, 0, 1.0);
 }; 
