@@ -1,4 +1,5 @@
 #pragma warning(disable:4996)
+#pragma once
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -101,48 +102,23 @@ unsigned int createShaderProgram(const std::string & vertexShaderSource,
 }
 
 void loadEntity(const char * filename, const char* textureFile, glm::mat4 modelMatrix) {
-	Entity newEntity = *readOBJ_better(filename, textureFile, modelMatrix);
+	Entity newEntity = *readOBJ(filename, textureFile, modelMatrix);
 
 	entities.push_back(newEntity);
 }
 
 void init() {
-	//should read these from file
-	std::string _vertexShaderSource = "#version 330 core \n \
-										uniform mat4 projMatrix; \
-										uniform mat4 viewMatrix; \
-										uniform mat4 modelMatrix; \
-										uniform vec3 lightPosition; \
-										in vec3 vertex; \
-										in vec3 normal; \
-										in vec2 textureCoords; \
-										out vec3 toLightVector; \
-										out vec3 surfaceNormal; \
-										out vec2 texCoords; \
-										void main() { \
-											vec4 worldPosition = modelMatrix * vec4(vertex, 1.0); \
-											gl_Position = projMatrix * viewMatrix * worldPosition; \
-											surfaceNormal = (modelMatrix * vec4(normal, 0.0)).xyz; \
-											toLightVector = lightPosition - worldPosition.xyz; \
-											texCoords = textureCoords; }";
-
-	std::string _fragmentShaderSource = "in vec3 surfaceNormal; \
-										in vec3 toLightVector; \
-										in vec2 texCoords; \
-										uniform sampler2D tex; \
-										void main() {		\
-											float nDotl = dot(normalize(surfaceNormal), normalize(toLightVector));\
-											float brightness = max(nDotl, 0.2);\
-											gl_FragColor = mix(vec4(brightness, brightness, brightness, 1.0), texture2D(tex, texCoords), 0.5); \
-											 }"; //gl_FragColor = vec4(texCoords.x, texCoords.y, 0, 1.0);
+	
+	std::string _vertexShaderSource = readShader("shaders/vertexShaderEntities.txt");
+	std::string _fragmentShaderSource = readShader("shaders/fragmentShaderEntities.txt");
 
 	g_programId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource);
 
 	
-	//LOAD game Entity's textures and ViewMatrix
+	//load game Entities
 	glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(4, 0, 1));
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
-	loadEntity("E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/house.obj", "E:/UNI/ExtraCurricular/OpenGL/C++/C++OpenGL_1/Debug/house.png", tempModelMatrix);
+	loadEntity("../Debug/house.obj", "../Debug/house.png", tempModelMatrix);
 
 	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, 0, 10));
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
@@ -172,6 +148,7 @@ void render() {
 		int modelMatrixId = glGetUniformLocation(g_programId, "modelMatrix");
 		glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj->modelMatrix[0][0]);
 		//bind texture
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, obj->textureId);
 		//bind vao
 		glBindVertexArray(obj->VAO);
@@ -201,8 +178,15 @@ void display() {
 void cleanUp(SDL_Window* _window, SDL_GLContext _context) {
 	//unload entities
 	for (Entity e : entities) {
-
+		//this should be handled by a loader class that only loads obj's if unique (not implemented yet)
+		//delete VBOs
+		glDeleteBuffers(1, &e.vertVBOId);
+		glDeleteBuffers(1, &e.normVBOId);
+		glDeleteBuffers(1, &e.texVBOId);
+		//delete VAO
+		glDeleteVertexArrays(1, &e.VAO);
 	}
+	entities.clear(); //calls deconstructor in all entities
 	//delete shaders
 	glDeleteShader(g_vertexShaderId);
 	glDeleteShader(g_fragmentShaderId);

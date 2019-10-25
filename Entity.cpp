@@ -6,7 +6,7 @@ Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, s
 
 	unsigned int _indexBufferId = 0;
 	// create VAO
-	glGenVertexArrays(1, &VAO); //size
+	glGenVertexArrays(1, &VAO); //generate vao
 	glBindVertexArray(VAO);	// bind the Vertex Array Object first, then bind and set VBO's, and then configure vertex attributes(s).
 
 	//indices
@@ -14,29 +14,30 @@ Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, s
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(unsigned int), &_indices[0], GL_STATIC_DRAW); //STREAM_DRAW and DYNAMIC_DRAW
 	//vertices
-	Entity::storeDataInAttributeList(0, 3, _data);
+	this->vertVBOId = Entity::storeDataInAttributeList(0, 3, _data);
 	//normals
-	Entity::storeDataInAttributeList(1, 3, _normals);
+	this->normVBOId = Entity::storeDataInAttributeList(1, 3, _normals);
 	//textureCoords
-	Entity::storeDataInAttributeList(2, 2, _texCoords);
+	this->texVBOId = Entity::storeDataInAttributeList(2, 2, _texCoords);
 
+	this->textureId = textureId;
+	this->indexBufferSize = _indices.size();
 
 	glBindVertexArray(0); //unbind
-	indexBufferSize = _indices.size();
-
+	
 	if(_modelMatrix == NULL)
 		this->modelMatrix = glm::mat4(1.0f); //default model matrix
 	else
 		this->modelMatrix = *_modelMatrix;
 
-	this->textureId = textureId;
-
+	//debuggin purposes
 	std::cout << "VAO: " << VAO << std::endl;
 	std::cout << "Indices: " << _indices.size() << std::endl;
 	std::cout << "Vertices: " << _data.size() << std::endl;
 	std::cout << "Normals: " << _normals.size() << std::endl;
 	std::cout << "textureCoords: " << _texCoords.size() << std::endl;
 }
+
 
 int Entity::update() {
 	modelMatrix = glm::rotate(modelMatrix, 3.14f / 200, glm::vec3(0, 1.0, 0));
@@ -45,7 +46,7 @@ int Entity::update() {
 }
 
 // creates a VBO and binds it to current VAO
-void Entity::storeDataInAttributeList(int attributeNumber, int coordinateSize, std::vector<float>& _data) {
+unsigned int Entity::storeDataInAttributeList(int attributeNumber, int coordinateSize, std::vector<float>& _data) {
 	unsigned int _bufferId = 0;
 	glGenBuffers(1, &_bufferId); //gen vbo
 	glBindBuffer(GL_ARRAY_BUFFER, _bufferId); //bind vbo
@@ -54,5 +55,7 @@ void Entity::storeDataInAttributeList(int attributeNumber, int coordinateSize, s
 	glVertexAttribPointer(attributeNumber, coordinateSize, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	return _bufferId;
 }
 

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <string>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -14,4 +15,4 @@ unsigned int loadTexture(const char* textureFile);
 
 Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMatrix);
 
-Entity* readOBJ_better(const char* filename, const char* textureFile, glm::mat4 modelMatrix);
+std::string readShader(const char* filename);
