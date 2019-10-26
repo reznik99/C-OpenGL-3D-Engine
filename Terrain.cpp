@@ -55,8 +55,8 @@ float Terrain::getHeightAt(int x, int z) {
 	if (gridX < 0 || gridZ < 0 || gridX >= heights.size() - 1 || gridZ >= heights.size() - 1) 
 		return NULL;
 
-	float xCoord = fmod(x, gridSquareSize);//(x % (int)gridSquareSize) / gridSquareSize;
-	float zCoord = fmod(z, gridSquareSize) / gridSquareSize;
+	float xCoord = (float)fmod(x, gridSquareSize) / gridSquareSize;//(x % (int)gridSquareSize) / gridSquareSize;
+	float zCoord = (float)fmod(z, gridSquareSize) / gridSquareSize;
 	float answer;
 	if (xCoord <= (1 - zCoord)) {
 		answer = Terrain::barryCentric(glm::vec3(0, heights[gridX][gridZ], 0), glm::vec3(1,

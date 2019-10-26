@@ -1,5 +1,7 @@
 #include "Loader.h"
 
+std::map<std::string, std::vector<unsigned int>> cache;
+
 unsigned int loadTexture(const char* textureFile) {
 
 	unsigned int textureId;
@@ -28,6 +30,16 @@ unsigned int loadTexture(const char* textureFile) {
 }
 
 Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMatrix) {
+	//if loaded obj before, don't load again!
+	if (cache.count(filename)) {
+		std::cout << "Cache Hit!...:  " << filename << std::endl;
+		std::vector<unsigned int> ids(cache.at(filename));
+		Entity* cachedEntity = new Entity();
+		cachedEntity->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], &modelMatrix);
+
+		return cachedEntity;
+	}
+
 	std::cout << "Reading...:  " << filename << std::endl;
 
 	//indices (0 indexed)
@@ -129,6 +141,13 @@ Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMa
 
 	std::cout << "Loaded Entity successfully" << std::endl;
 
+	std::vector<unsigned int> idList{ 
+		newEntity->VAO, newEntity->vertVBOId, 
+		newEntity->normVBOId, newEntity->texVBOId,
+		newEntity->textureId, newEntity->indexBufferSize
+	};
+	cache.insert(std::pair<std::string, std::vector<unsigned int>>(filename, idList));
+
 	return newEntity;
 }
 
@@ -218,7 +237,7 @@ glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, in
 float getHeight(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT) {
 	if (i < 0 || i >= height || j < 0 || j >= height) return NULL;
 
-	unsigned char* pixelOffset = heightMap + (i + height * j) * nrChannels;
+	unsigned char* pixelOffset = heightMap + (i * height + j) * nrChannels;
 	unsigned char r = pixelOffset[0];
 	unsigned char g = pixelOffset[1];
 	unsigned char b = pixelOffset[2];

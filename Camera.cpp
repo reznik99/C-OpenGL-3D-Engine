@@ -14,7 +14,7 @@ Camera::Camera(glm::vec3 pos, glm::vec3 angles) {
 }
 
 void Camera::update() {
-	float speed = 0.1f;
+	float speed = 0.15f;
 	glm::vec3 front = getFront();
 	glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
 
@@ -99,5 +99,9 @@ glm::mat4 Camera::getViewMatrix() {
 
 glm::vec3 Camera::getPosition() {
 	return this->position;
+}
+
+void Camera::setPosition(glm::vec3 pos) {
+	this->position = pos;
 }
 

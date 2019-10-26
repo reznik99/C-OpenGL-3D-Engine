@@ -1,6 +1,8 @@
 
 #include "Entity.h"
 
+Entity::Entity() {}
+
 Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, std::vector<float>& _normals,
 	std::vector<float>& _texCoords, glm::mat4 *_modelMatrix, unsigned int textureId) {
 
@@ -38,6 +40,19 @@ Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, s
 	std::cout << "textureCoords: " << _texCoords.size() << std::endl;
 }
 
+void Entity::loadCached(unsigned int _VAO, unsigned int _vertVBOId, unsigned int _normVBOId,
+	unsigned int _texVBOId, unsigned int _textureId, unsigned int _indexBufferSize, glm::mat4* _modelMatrix ) {
+
+	this->VAO = _VAO;
+	this->vertVBOId = _vertVBOId;
+	this->normVBOId = _normVBOId;
+	this->texVBOId = _texVBOId;
+	this->textureId = _textureId;
+	this->indexBufferSize = _indexBufferSize;
+
+	this->modelMatrix = *_modelMatrix;
+
+}
 
 int Entity::update() {
 	modelMatrix = glm::rotate(modelMatrix, 3.14f / 200, glm::vec3(0, 1.0, 0));

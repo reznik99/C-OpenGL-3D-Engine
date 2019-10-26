@@ -124,22 +124,31 @@ void init() {
 
 
 	//generate terrain
-	glm::mat4 terrainModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrain.mapSize / -2.0f, 0	, terrain.mapSize / -2.0f));
+	glm::mat4 terrainModelMatrix = glm::translate(glm::mat4(1), glm::vec3(0, 0, 0));
 	genTerrain("gameFiles/Heightmap.png", "gameFiles/Rock.png", terrainModelMatrix, &terrain);
+
+	//place player above ground
+	camera.setPosition(glm::vec3(0, terrain.getHeightAt(0, 2), 0));
 
 	//load game Entities
 	{
-		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(4, terrain.getHeightAt(5, 2) + 1, 1));
+		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(4, terrain.getHeightAt(5, 2), 1));
 		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
 		loadEntity("gameFiles/House.obj", "gameFiles/House.png", tempModelMatrix);
 
-		tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, terrain.getHeightAt(10, 10) + 1, 10));
-		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
-		loadEntity("gameFiles/Palm.obj", "gameFiles/Palm.png", tempModelMatrix);
-
-		tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, terrain.getHeightAt(10, 5) + 1, 5));
+		tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, terrain.getHeightAt(11, 6), 5));
 		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.1f));
 		loadEntity("gameFiles/Well.obj", "gameFiles/Well.png", tempModelMatrix);
+
+		int numOfTrees = 10;
+		for (int i = 0; i < numOfTrees; i++) {
+			int x = rand() % 100 + 1;
+			int z = rand() % 100 + 1;
+			float scale = (rand() % 10) / 10.0f + 0.15f;
+			tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(x, terrain.getHeightAt(z, x), z));
+			tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(scale));
+			loadEntity("gameFiles/Palm.obj", "gameFiles/Palm.png", tempModelMatrix);
+		}
 	}
 
 
