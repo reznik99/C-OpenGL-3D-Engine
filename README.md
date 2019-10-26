@@ -14,16 +14,16 @@
 
 Implemented:
 * Simple 3D rendering pipeline
-* Texture loader
+* Texture loader (texture UVs not quite right)
 * Crude FPS pov
 * Lighting (specular/diffuse/ambient) (No specular)
 * Terrain (Generate from heightmap)
 * Terrain Collision (not with player yet)
 
 To-Be Implemented:
-* Reflections
 * Skybox
 * Water (reflection/refraction)
+* Reflections
 * Shadows
 * Particle renderer
 * LOD
