@@ -24,8 +24,6 @@ Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, s
 	this->indexBufferSize = _indices.size();
 
 	glBindVertexArray(0); //unbind
-
-	printf("%d: \n", vertVBOId);
 	
 	if(_modelMatrix == NULL)
 		this->modelMatrix = glm::mat4(1.0f); //default model matrix

@@ -17,3 +17,9 @@ unsigned int loadTexture(const char* textureFile);
 Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMatrix);
 
 std::string readShader(const char* filename);
+
+Entity* genTerrain(unsigned int mapSize, float MAX_HEIGHT, const char* heightMapFile, glm::mat4 modelMatrix);
+
+glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT);
+
+float getHeight(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT);
