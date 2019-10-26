@@ -138,7 +138,8 @@ std::string readShader(const char* filename) {
 		(std::istreambuf_iterator<char>()));
 }
 
-Entity* genTerrain(unsigned int mapSize, float MAX_HEIGHT, const char* heightMapFile, glm::mat4 modelMatrix) {
+void genTerrain(const char* heightMapFile, const char* textureFile1, glm::mat4 modelMatrix, Terrain* newTerrain) {
+	std::cout << "Generating terrain with heightmap :  " << heightMapFile << std::endl;
 
 	//read heightMapFile
 	int width, height, nrChannels;
@@ -154,16 +155,21 @@ Entity* genTerrain(unsigned int mapSize, float MAX_HEIGHT, const char* heightMap
 	std::vector<float> normals(VERTEX_COUNT * VERTEX_COUNT * 3);
 	std::vector<float> uvs(VERTEX_COUNT * VERTEX_COUNT * 2);
 
+	std::vector<std::vector<float>> heights;
+	heights.resize(VERTEX_COUNT, std::vector<float>(VERTEX_COUNT, 0));
+
 	int vertexPointer = 0;
 	for (int i = 0; i < VERTEX_COUNT; i++) {
 		for (int j = 0; j < VERTEX_COUNT; j++) {
 			//vertices
-			vertices[vertexPointer * 3] = (float)j / ((float)VERTEX_COUNT - 1) * mapSize;
-			vertices[vertexPointer * 3 + 1] = getHeight(i, j, data, height, nrChannels, MAX_HEIGHT);
-			vertices[vertexPointer * 3 + 2] = (float)i / ((float)VERTEX_COUNT - 1) * mapSize;
+			float vertHeight = getHeight(i, j, data, height, nrChannels, newTerrain->MAX_HEIGHT);
+			heights[i][j] = vertHeight; //add height to collision buffer
+			vertices[vertexPointer * 3] = (float)j / ((float)VERTEX_COUNT - 1) * newTerrain->mapSize;
+			vertices[vertexPointer * 3 + 1] = vertHeight;
+			vertices[vertexPointer * 3 + 2] = (float)i / ((float)VERTEX_COUNT - 1) * newTerrain->mapSize;
 			//normals
 			glm::vec3 normal = glm::vec3(0, 1, 0);//calculateNormal(j, i, image);
-			normal = calculateNormal(i, j, data, height, nrChannels, MAX_HEIGHT);
+			normal = calculateNormal(i, j, data, height, nrChannels, newTerrain->MAX_HEIGHT);
 			normals[vertexPointer * 3] = normal.x;
 			normals[vertexPointer * 3 + 1] = normal.y;
 			normals[vertexPointer * 3 + 2] = normal.z;
@@ -192,14 +198,12 @@ Entity* genTerrain(unsigned int mapSize, float MAX_HEIGHT, const char* heightMap
 	}
 
 	//Read textures (normal, textures, blendmap)
-	int texId = loadTexture("../Debug/rock.png");
+	int texId = loadTexture(textureFile1);
 
-	//generate Entity with data
-	Entity *newEntity = new Entity(vertices, indices, normals, uvs, &modelMatrix, texId);
+	//load Terrain with data
+	newTerrain->load(vertices, indices, normals, uvs, modelMatrix, texId, heights);
 
 	stbi_image_free(data);
-	
-	return newEntity;
 }
 
 glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT) {

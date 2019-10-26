@@ -10,5 +10,5 @@ float tiling = 25.0;
 void main() {
 	float nDotl = dot(normalize(surfaceNormal), normalize(toLightVector));
 	float brightness = max(nDotl, ambientLighting);
-	gl_FragColor = mix(vec4(brightness, brightness, brightness, 1.0), texture2D(tex, texCoords * tiling), 0.5); //gl_FragColor = vec4(texCoords.x, texCoords.y, 0, 1.0);
+	gl_FragColor = vec4(brightness,brightness,brightness, 1.0) * texture2D(tex, texCoords * tiling);
 }; 

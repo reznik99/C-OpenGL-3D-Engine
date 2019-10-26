@@ -27,7 +27,7 @@ unsigned int g_EntityProgramId = 0, g_TerrainProgramId = 0;
 unsigned int shaderIds[4]; //vertexEntities - fragEntities | vertexTerrain - fragTerrain ... etc
 
 std::vector<Entity> entities;
-Entity* terrain = nullptr;
+Terrain terrain;
 
 // 90° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 glm::mat4 projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 100.0f);
@@ -122,23 +122,26 @@ void init() {
 	_fragmentShaderSource = readShader("shaders/fragmentShaderTerrain.txt");
 	g_TerrainProgramId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource, 2);
 
-	//load game Entities
-	glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(4, 0, 1));
-	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
-	loadEntity("../Debug/house.obj", "../Debug/house.png", tempModelMatrix);
-
-	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, 0, 10));
-	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
-	loadEntity("../Debug/Palm2LowPoly.obj", "../Debug/Palm2.png", tempModelMatrix);
-
-	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, 0, 5));
-	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.1f));
-	loadEntity("../Debug/well.obj", "../Debug/well3.png", tempModelMatrix);
 
 	//generate terrain
-	int mapSize = 50;
-	float maxMapHeight = 20;
-	terrain = genTerrain(mapSize, maxMapHeight, "../Debug/heightmap.png", glm::translate(glm::mat4(1), glm::vec3(-mapSize/2, maxMapHeight/2, -mapSize / 2)));
+	glm::mat4 terrainModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrain.mapSize / -2.0f, 0	, terrain.mapSize / -2.0f));
+	genTerrain("gameFiles/Heightmap.png", "gameFiles/Rock.png", terrainModelMatrix, &terrain);
+
+	//load game Entities
+	{
+		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(4, terrain.getHeightAt(5, 2) + 1, 1));
+		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
+		loadEntity("gameFiles/House.obj", "gameFiles/House.png", tempModelMatrix);
+
+		tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, terrain.getHeightAt(10, 10) + 1, 10));
+		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
+		loadEntity("gameFiles/Palm.obj", "gameFiles/Palm.png", tempModelMatrix);
+
+		tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, terrain.getHeightAt(10, 5) + 1, 5));
+		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.1f));
+		loadEntity("gameFiles/Well.obj", "gameFiles/Well.png", tempModelMatrix);
+	}
+
 
 	std::cout << "EntProgram ID: " << g_EntityProgramId << std::endl;
 	std::cout << "TerProgram ID: " << g_TerrainProgramId << std::endl;
@@ -191,17 +194,17 @@ void render() {
 		
 	//load uniform for model matrix
 	int modelMatrixId = glGetUniformLocation(g_TerrainProgramId, "modelMatrix");
-	glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &terrain->modelMatrix[0][0]);
-
+	glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &terrain.modelMatrix[0][0]);
+	//printf("%d | %d\n", terrain.indexBufferSize, terrain.VAO);
 	//bind texture
-	if (terrain->textureId > 0) {
+	if (terrain.textureId > 0) {
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, terrain->textureId);
+		glBindTexture(GL_TEXTURE_2D, terrain.textureId);
 	}
 	//bind vao
-	glBindVertexArray(terrain->VAO);
+	glBindVertexArray(terrain.VAO);
 	//render
-	glDrawElements(GL_TRIANGLES, terrain->indexBufferSize, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, terrain.indexBufferSize, GL_UNSIGNED_INT, 0);
 	//unbind
 	glBindVertexArray(0);
 

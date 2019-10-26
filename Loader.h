@@ -9,7 +9,7 @@
 #include <GL\glew.h>
 #include <STB\stb_image.h>
 #include <Entity.h>
-#include <map>
+#include <Terrain.h>
 
 
 unsigned int loadTexture(const char* textureFile);
@@ -18,7 +18,7 @@ Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMa
 
 std::string readShader(const char* filename);
 
-Entity* genTerrain(unsigned int mapSize, float MAX_HEIGHT, const char* heightMapFile, glm::mat4 modelMatrix);
+void genTerrain(const char* heightMapFile, const char* textureFile1, glm::mat4 modelMatrix, Terrain* newTerrain);
 
 glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT);
 
