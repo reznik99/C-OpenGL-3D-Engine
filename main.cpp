@@ -31,7 +31,7 @@ Terrain terrain;
 
 // 90° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 glm::mat4 projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 100.0f);
-Camera camera(glm::vec3(0, 2, 6), glm::vec3(0, 270, -180));
+Camera camera(glm::vec3(0, 2, 6), glm::vec3(0, 0, 0));
 glm::vec3 g_light(25.0f, 20.0f, 0.0f);
 
 unsigned int createShader(unsigned int type, const std::string& source) {
@@ -128,22 +128,22 @@ void init() {
 	genTerrain("gameFiles/Heightmap.png", "gameFiles/Rock.png", terrainModelMatrix, &terrain);
 
 	//place player above ground
-	camera.setPosition(glm::vec3(0, terrain.getHeightAt(0, 2), 0));
+	camera.setPosition(glm::vec3(terrain.mapSize / 2, terrain.getHeightAt(terrain.mapSize / 2, terrain.mapSize / 2), terrain.mapSize / 2));
 
 	//load game Entities
 	{
-		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(4, terrain.getHeightAt(5, 2), 1));
-		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.3f));
+		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(45, terrain.getHeightAt(35, 45), 35));
+		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.35f));
 		loadEntity("gameFiles/House.obj", "gameFiles/House.png", tempModelMatrix);
 
-		tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(10, terrain.getHeightAt(11, 6), 5));
-		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.1f));
+		tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(40, terrain.getHeightAt(28, 40), 28));
+		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.15f));
 		loadEntity("gameFiles/Well.obj", "gameFiles/Well.png", tempModelMatrix);
 
 		int numOfTrees = 10;
 		for (int i = 0; i < numOfTrees; i++) {
-			int x = rand() % 100 + 1;
-			int z = rand() % 100 + 1;
+			int x = rand() % (int)terrain.mapSize + 1;
+			int z = rand() % (int)terrain.mapSize + 1;
 			float scale = (rand() % 10) / 10.0f + 0.15f;
 			tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(x, terrain.getHeightAt(z, x), z));
 			tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(scale));
@@ -204,12 +204,10 @@ void render() {
 	//load uniform for model matrix
 	int modelMatrixId = glGetUniformLocation(g_TerrainProgramId, "modelMatrix");
 	glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &terrain.modelMatrix[0][0]);
-	//printf("%d | %d\n", terrain.indexBufferSize, terrain.VAO);
+
 	//bind texture
-	if (terrain.textureId > 0) {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, terrain.textureId);
-	}
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, terrain.textureId);
 	//bind vao
 	glBindVertexArray(terrain.VAO);
 	//render
