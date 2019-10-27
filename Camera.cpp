@@ -1,5 +1,7 @@
 #include "Camera.h"
 
+#include "Renderer.h";
+
 Camera::Camera(glm::vec3 pos, glm::vec3 angles) {
 	this->position = glm::vec3(pos);
 	this->angles = glm::vec3(angles);
@@ -13,22 +15,41 @@ Camera::Camera(glm::vec3 pos, glm::vec3 angles) {
 	this->prevMouseY = -1;
 }
 
-void Camera::update() {
-	float speed = 0.15f;
+void Camera::update(Renderer* renderer) {
 	glm::vec3 front = getFront();
 	glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
 
-	if (moveForward) {
-		this->position += front * speed;
-	}if (moveRight) {
-		this->position += right * speed;
-	}if (moveBackwards) {
-		this->position -= front * speed;
-	}if (moveLeft) {
-		this->position -= right * speed;
+	float speed = 0.01f;
+
+	if (!jumped) {
+		if (moveForward)
+			this->velocity = front * MAX_SPEED;
+		if (moveRight)
+			this->velocity = right * MAX_SPEED;
+		if (moveBackwards)
+			this->velocity = front * -MAX_SPEED;
+		if (moveLeft)
+			this->velocity = right * -MAX_SPEED;
+	}
+	if (!moveForward && !moveRight && !moveBackwards && !moveLeft && !jumped) {
+		this->velocity[0] = 0;
+		this->velocity[2] = 0;
 	}
 
-	//this->position[1] = 1; //keep player level on ground
+	this->position += this->velocity;	//move
+	this->velocity[1] -= this->GRAVITY; //fall
+
+	float groundPos = this->playerHeight + renderer->getTerrain()->
+		getHeightAt(this->position[2], this->position[0]);
+	//collide
+	if (this->position[1] < groundPos) {
+		this->position[1] = groundPos;
+		this->velocity[1] = 0;
+		this->jumped = false;
+	}
+	else {
+		jumped = true;
+	}
 }
 
 bool Camera::checkInputs(SDL_Event _event) {
@@ -54,6 +75,12 @@ bool Camera::checkInputs(SDL_Event _event) {
 			break;
 		case SDLK_d:
 			moveRight = activate;
+			break;
+		case SDLK_SPACE:
+			if (!this->jumped) {
+				this->jumped = true;
+				this->velocity[1] += this->JUMP_POWER;
+			}
 			break;
 		case SDLK_ESCAPE:
 			return true;

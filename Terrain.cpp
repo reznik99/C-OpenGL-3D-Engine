@@ -26,7 +26,6 @@ void Terrain::load(std::vector<float>& _data, std::vector<unsigned int>& _indice
 	this->textureId = textureId;
 	this->indexBufferSize = _indices.size();
 	this->modelMatrix = _modelMatrix;
-	printf("%d vs %d\n", _indices.size(), this->indexBufferSize);
 
 	this->heights = _heights;
 

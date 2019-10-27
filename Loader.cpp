@@ -29,6 +29,36 @@ unsigned int loadTexture(const char* textureFile) {
 	return textureId;
 }
 
+unsigned int loadCubeMapTexture(std::vector<std::string> textureFiles) {
+	unsigned int textureId;
+	glGenTextures(1, &textureId);
+	glActiveTexture(textureId);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+
+	for (int i = 0; i < textureFiles.size(); i++) {
+		const char* textureFile = textureFiles.at(i).c_str();
+		// load and generate the texture
+		int width, height, nrChannels;
+		unsigned char* data = stbi_load(textureFile, &width, &height, &nrChannels, STBI_rgb_alpha);
+		if (data) {
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0,
+				GL_RGBA, GL_UNSIGNED_BYTE, data);
+		}
+		else
+			std::cout << "Failed to load texture" << std::endl;
+		stbi_image_free(data);
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	std::cout << "Loaded cubemap" << std::endl;
+
+	return textureId;
+}
+
 Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMatrix) {
 	//if loaded obj before, don't load again!
 	if (cache.count(filename)) {

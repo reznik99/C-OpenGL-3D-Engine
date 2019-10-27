@@ -5,10 +5,8 @@
 #include <fstream>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
-#include <GL/GL.h>
 #include <Entity.h>
 #include <Camera.h>
 #include <STB/stb_image.h>
@@ -42,7 +40,7 @@ void init() {
 
 	//place player above ground
 	float terrainSize = renderer->getTerrain()->mapSize;
-	camera.setPosition(glm::vec3(terrainSize / 2, renderer->getTerrain()->getHeightAt(terrainSize / 2, terrainSize / 2), terrainSize / 2));
+	camera.setPosition(glm::vec3(terrainSize / 2, renderer->getTerrain()->getHeightAt(terrainSize / 2, terrainSize / 2) + camera.playerHeight, terrainSize / 2));
 
 	//load game Entities
 	{
@@ -77,7 +75,7 @@ void cleanUp(SDL_Window* _window, SDL_GLContext _context) {
 int main() {
 	//set up window
 	SDL_Window* _window = SDL_CreateWindow("OpenGL Engine", 
-		550, 200, width, height, SDL_WINDOW_OPENGL);
+		600, 50, width, height, SDL_WINDOW_OPENGL);
 	SDL_GLContext _context = SDL_GL_CreateContext(_window);
 	SDL_Event _event;
 
@@ -100,7 +98,7 @@ int main() {
 
 		//update
 		renderer->update();
-		camera.update();
+		camera.update(renderer);
 
 		//render
 		renderer->render(g_light, camera);

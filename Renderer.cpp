@@ -19,8 +19,20 @@ Renderer::Renderer(unsigned int width, unsigned int height) {
 	_vertexShaderSource = readShader("shaders/vertexShaderTerrain.txt");
 	_fragmentShaderSource = readShader("shaders/fragmentShaderTerrain.txt");
 	g_TerrainProgramId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource, 2);
+	//Skybox shaders and program
+	_vertexShaderSource = readShader("shaders/vertexShaderSkybox.txt");
+	_fragmentShaderSource = readShader("shaders/fragmentShaderSkybox.txt");
+	g_SkyboxProgramId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource, 4);
 
-	projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 100.0f);
+	projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 150.0f);
+
+	//load skybox
+	this->skyboxVBO = Entity::storeDataInAttributeList(0, this->VERTICES.size(), this->VERTICES);
+
+	//read textures
+	std::vector<std::string> files = { "gameFiles/Skybox/right.png", "gameFiles/Skybox/left.png", 
+		"gameFiles/Skybox/top.png", "gameFiles/Skybox/bottom.png", "gameFiles/Skybox/back.png", "gameFiles/Skybox/front.png" };
+	this->cubeMapTextureId = loadCubeMapTexture(files);
 
 	std::cout << "EntProgram ID: " << g_EntityProgramId << std::endl;
 	std::cout << "TerProgram ID: " << g_TerrainProgramId << std::endl;
@@ -30,6 +42,7 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 	glClearColor(0.2f, 0.4f, 0.6f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	//RENDER ENTITIES
 	glUseProgram(g_EntityProgramId);
 	this->loadUniforms(g_EntityProgramId, light, camera);
 
@@ -39,10 +52,8 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 		int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
 		glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj->modelMatrix[0][0]);
 		//bind texture
-		if (obj->textureId > 0) {
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, obj->textureId);
-		}
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, obj->textureId);
 		//bind vao
 		glBindVertexArray(obj->VAO);
 		//render
@@ -56,7 +67,6 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 	}
 
 	//RENDER TERRAINS
-
 	glUseProgram(g_TerrainProgramId);
 
 	this->loadUniforms(g_TerrainProgramId, light, camera);
@@ -74,6 +84,30 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 	glBindVertexArray(0);
 
 	glUseProgram(0);
+	
+	//RENDER SKYBOX
+	{
+		glUseProgram(g_SkyboxProgramId);
+		glm::mat4 skyboxViewMatrix = camera.getViewMatrix();
+		skyboxViewMatrix[3][0] = 0;
+		skyboxViewMatrix[3][1] = 0;		//so player never moves closer to skybox
+		skyboxViewMatrix[3][2] = 0;
+		int projMatrixId = glGetUniformLocation(g_SkyboxProgramId, "projMatrix");
+		int viewMatrixId = glGetUniformLocation(g_SkyboxProgramId, "viewMatrix");
+		glUniformMatrix4fv(projMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
+		glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &skyboxViewMatrix[0][0]);
+		//bind texture
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, this->cubeMapTextureId);
+
+		glBindBuffer(GL_ARRAY_BUFFER, this->skyboxVBO);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glDrawArrays(GL_TRIANGLES, 0, this->VERTICES.size());
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glUseProgram(0);
+	}
 
 }
 
@@ -83,7 +117,8 @@ void Renderer::update() {
 }
 
 void Renderer::processEntity(Entity e) {
-	this->entities.push_back(e); //should sort by texture/model to speedup rendering
+	//should sort by texture/model to speedup rendering
+	this->entities.push_back(e); 
 }
 
 void Renderer::loadUniforms(unsigned int _pid, glm::vec3& light, Camera& camera) {
@@ -112,6 +147,7 @@ void Renderer::cleanUp() {
 		glDeleteShader(_id);
 	glDeleteProgram(g_EntityProgramId);
 	glDeleteProgram(g_TerrainProgramId);
+	glDeleteProgram(g_SkyboxProgramId);
 }
 
 Terrain* Renderer::getTerrain() {

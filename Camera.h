@@ -5,12 +5,14 @@
 #include <glm\ext\matrix_transform.hpp>
 #include <iostream>
 
+class Renderer;
+
 class Camera
 {
 public:
 	Camera(glm::vec3 pos, glm::vec3 angles);
 
-	void update();
+	void update(Renderer* renderer);
 
 	bool checkInputs(SDL_Event _event);
 
@@ -29,8 +31,15 @@ public:
 	float prevMouseX;
 	float prevMouseY;
 
+	float playerHeight = 2.5;
+	bool jumped = false;
+	const float GRAVITY = 9.81 / 60.0f / 10.0f;
+	const float JUMP_POWER = 0.3f;
+	const float MAX_SPEED = 0.5f;
+
 private:
 	glm::vec3 position;
+	glm::vec3 velocity;
 	glm::vec3 angles;
 };
 
