@@ -1,10 +1,12 @@
 
 #include "Entity.h"
 
-Entity::Entity() {}
+Entity::Entity() {
+	this->modelMatrix = this->modelMatrix = glm::mat4(1.0f); //default model matrix
+}
 
 Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, std::vector<float>& _normals,
-	std::vector<float>& _texCoords, glm::mat4 *_modelMatrix, unsigned int textureId) {
+	std::vector<float>& _texCoords, glm::mat4 *_modelMatrix, unsigned int textureId, unsigned int normalTextureId) {
 
 	unsigned int _indexBufferId = 0;
 	// create VAO
@@ -23,14 +25,12 @@ Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, s
 	this->texVBOId = Entity::storeDataInAttributeList(2, 2, _texCoords);
 
 	this->textureId = textureId;
+	this->normalTextureId = normalTextureId;
 	this->indexBufferSize = _indices.size();
 
 	glBindVertexArray(0); //unbind
 	
-	if(_modelMatrix == NULL)
-		this->modelMatrix = glm::mat4(1.0f); //default model matrix
-	else
-		this->modelMatrix = *_modelMatrix;
+	this->modelMatrix = *_modelMatrix;
 
 	//debuggin purposes
 	std::cout << "VAO: " << VAO << std::endl;
@@ -41,13 +41,14 @@ Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, s
 }
 
 void Entity::loadCached(unsigned int _VAO, unsigned int _vertVBOId, unsigned int _normVBOId,
-	unsigned int _texVBOId, unsigned int _textureId, unsigned int _indexBufferSize, glm::mat4* _modelMatrix ) {
+	unsigned int _texVBOId, unsigned int _indexBufferSize, unsigned int _textureId, unsigned int _normalTextureId, glm::mat4* _modelMatrix ) {
 
 	this->VAO = _VAO;
 	this->vertVBOId = _vertVBOId;
 	this->normVBOId = _normVBOId;
 	this->texVBOId = _texVBOId;
 	this->textureId = _textureId;
+	this->normalTextureId = _normalTextureId;
 	this->indexBufferSize = _indexBufferSize;
 
 	this->modelMatrix = *_modelMatrix;

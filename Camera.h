@@ -33,7 +33,7 @@ public:
 
 	float playerHeight = 2.5;
 	bool jumped = false;
-	const float GRAVITY = 9.81 / 60.0f / 10.0f;
+	const float GRAVITY = 9.81f / 60.0f / 10.0f;
 	const float JUMP_POWER = 0.3f;
 	const float MAX_SPEED = 0.5f;
 

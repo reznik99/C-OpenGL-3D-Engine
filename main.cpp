@@ -25,8 +25,8 @@ Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));
 glm::vec3 g_light;
 
 
-void loadEntity(const char * filename, const char* textureFile, glm::mat4 modelMatrix) {
-	Entity newEntity = *readOBJ_better(filename, textureFile, modelMatrix);
+void loadEntity(const char * filename, const char* textureFile, const char* textureNormalFile, glm::mat4 modelMatrix) {
+	Entity newEntity = *readOBJ_better(filename, textureFile, textureNormalFile, modelMatrix);
 
 	renderer->processEntity(newEntity);
 }
@@ -48,12 +48,12 @@ void init() {
 	//load game Entities
 	{
 		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrainSize/3, renderer->getTerrain()->getHeightAt(terrainSize/3, terrainSize/3), terrainSize/3));
-		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.35f));
-		loadEntity("gameFiles/House.obj", "gameFiles/House.png", tempModelMatrix);
+		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.5f));
+		loadEntity("gameFiles/House.obj", "gameFiles/House.png", nullptr, tempModelMatrix);
 
 		tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrainSize/3 + 10, renderer->getTerrain()->getHeightAt(terrainSize/3 + 10, terrainSize/3+10), terrainSize/3 + 10));
 		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.15f));
-		loadEntity("gameFiles/Well.obj", "gameFiles/Well.png", tempModelMatrix);
+		loadEntity("gameFiles/Well.obj", "gameFiles/Well.png", nullptr, tempModelMatrix);
 
 		int numOfTrees = 10;
 		for (int i = 0; i < numOfTrees; i++) {
@@ -62,7 +62,7 @@ void init() {
 			float scale = (rand() % 10) / 10.0f + 0.15f;
 			tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(x, renderer->getTerrain()->getHeightAt(z, x), z));
 			tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(scale));
-			loadEntity("gameFiles/Palm.obj", "gameFiles/Palm.png", tempModelMatrix);
+			loadEntity("gameFiles/Palm.obj", "gameFiles/Palm.png", nullptr, tempModelMatrix);
 		}
 	}
 }

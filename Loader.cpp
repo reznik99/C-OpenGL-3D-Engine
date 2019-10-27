@@ -2,7 +2,6 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
-#include <unordered_map>
 
 std::map<std::string, std::vector<unsigned int>> cache;
 
@@ -74,13 +73,13 @@ unsigned int loadCubeMapTexture(std::vector<std::string> textureFiles) {
 	return textureId;
 }
 
-Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMatrix) {
+Entity* readOBJ(const char* filename, const char* textureFile, const char* textureNormalFile, glm::mat4 modelMatrix) {
 	//if loaded obj before, don't load again!
 	if (cache.count(filename)) {
 		std::cout << "Cache Hit!...:  " << filename << std::endl;
 		std::vector<unsigned int> ids(cache.at(filename));
 		Entity* cachedEntity = new Entity();
-		cachedEntity->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], &modelMatrix);
+		cachedEntity->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &modelMatrix);
 
 		return cachedEntity;
 	}
@@ -181,29 +180,27 @@ Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMa
 
 	//load texture into opengl
 	unsigned int textureId = loadTexture(textureFile);
+	unsigned int textureNormalId;
+	if(textureNormalFile != nullptr)
+		textureNormalId = loadTexture(textureNormalFile);
 	//save Id's to Entity
-	Entity *newEntity = new Entity(vertices, indices, normals, textureCoords, &modelMatrix, textureId);
+	Entity *newEntity = new Entity(vertices, indices, normals, textureCoords, &modelMatrix, textureId, textureNormalId);
 
 	std::cout << "Loaded Entity successfully" << std::endl;
 
-	std::vector<unsigned int> idList{ 
-		newEntity->VAO, newEntity->vertVBOId, 
-		newEntity->normVBOId, newEntity->texVBOId,
-		newEntity->textureId, newEntity->indexBufferSize
-	};
-	cache.insert(std::pair<std::string, std::vector<unsigned int>>(filename, idList));
+	cacheEntity(newEntity, filename);
 
 	return newEntity;
 }
 
-Entity* readOBJ_better(const char* filename, const char* textureFile, glm::mat4 modelMatrix) {
+Entity* readOBJ_better(const char* filename, const char* textureFile, const char* textureNormalFile, glm::mat4 modelMatrix) {
 
 	//if loaded obj before, don't load again!
 	if (cache.count(filename)) {
 		std::cout << "Cache Hit!...:  " << filename << std::endl;
 		std::vector<unsigned int> ids(cache.at(filename));
 		Entity* cachedEntity = new Entity();
-		cachedEntity->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], &modelMatrix);
+		cachedEntity->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &modelMatrix);
 
 		return cachedEntity;
 	}
@@ -223,26 +220,22 @@ Entity* readOBJ_better(const char* filename, const char* textureFile, glm::mat4 
 	for (const auto& shape : shapes) {
 		for (const auto& index : shape.mesh.indices) {
 			Vertex vertex = {};
-
 			vertex.pos = {
 				attrib.vertices[3 * index.vertex_index + 0],
 				attrib.vertices[3 * index.vertex_index + 1],
 				attrib.vertices[3 * index.vertex_index + 2]
 			};
-
 			vertex.normal = {
 				attrib.normals[3 * index.normal_index + 0],
 				attrib.normals[3 * index.normal_index + 1],
 				attrib.normals[3 * index.normal_index + 2]
 			};
-
 			vertex.texCoord = {
 				attrib.texcoords[2 * index.texcoord_index + 0],
 				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
 				//attrib.texcoords[2 * index.texcoord_index + 0],
 				//attrib.texcoords[2 * index.texcoord_index + 1]
 			};
-
 			vertices.push_back(vertex);
 			indices.push_back(indices.size());
 		}
@@ -267,19 +260,27 @@ Entity* readOBJ_better(const char* filename, const char* textureFile, glm::mat4 
 
 	//load texture into opengl
 	unsigned int textureId = loadTexture(textureFile);
+	unsigned int textureNormalId = -1;
+	if(textureNormalFile != nullptr)
+		textureNormalId = loadTexture(textureNormalFile);
 	//save Id's to Entity
-	Entity* newEntity = new Entity(verticesOut, indices, normalsOut, textureCoordsOut, &modelMatrix, textureId);
+	Entity* newEntity = new Entity(verticesOut, indices, normalsOut, textureCoordsOut, &modelMatrix, textureId, textureNormalId);
 
 	std::cout << "Loaded Entity successfully" << std::endl;
 
+	cacheEntity(newEntity, filename);
+
+	return newEntity;
+}
+
+void cacheEntity(Entity* newEntity, const char* filename) {
 	std::vector<unsigned int> idList{
 		newEntity->VAO, newEntity->vertVBOId,
 		newEntity->normVBOId, newEntity->texVBOId,
-		newEntity->textureId, newEntity->indexBufferSize
+		newEntity->indexBufferSize,
+		newEntity->textureId, newEntity->normalTextureId,
 	};
 	cache.insert(std::pair<std::string, std::vector<unsigned int>>(filename, idList));
-
-	return newEntity;
 }
 
 std::string readShader(const char* filename) {

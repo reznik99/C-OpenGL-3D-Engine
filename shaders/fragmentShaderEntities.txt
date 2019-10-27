@@ -7,7 +7,7 @@ in float visibility;
 
 layout(location = 0) out vec4 diffuseColor;
 
-uniform sampler2D tex;
+uniform sampler2D diffuseTex;
 
 float ambientLighting = 0.1;
 vec3 skyColor = vec3(0, 0.4f, 0.7f); //should be uniform
@@ -17,7 +17,7 @@ void main() {
 	float nDotl = dot(normalize(surfaceNormal), normalize(toLightVector));
 	float brightness = max(nDotl, ambientLighting);
 
-	diffuseColor = vec4(brightness, brightness, brightness, 1.0) * texture2D(tex, texCoords);
+	diffuseColor = vec4(brightness, brightness, brightness, 1.0) * texture2D(diffuseTex, texCoords);
 
 	diffuseColor = mix(vec4(skyColor, 1.0), diffuseColor, visibility);
 }; 

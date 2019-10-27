@@ -16,9 +16,11 @@ unsigned int loadTexture(const char* textureFile);
 
 unsigned int loadCubeMapTexture(std::vector<std::string> textureFiles);
 
-Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMatrix);
+Entity* readOBJ(const char* filename, const char* textureFile, const char* textureNormalFile, glm::mat4 modelMatrix);
 
-Entity* readOBJ_better(const char* filename, const char* textureFile, glm::mat4 modelMatrix);
+Entity* readOBJ_better(const char* filename, const char* textureFile, const char* textureNormalFile, glm::mat4 modelMatrix);
+
+void cacheEntity(Entity* newEntity, const char* filename);
 
 std::string readShader(const char* filename);
 

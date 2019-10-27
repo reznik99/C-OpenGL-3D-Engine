@@ -1,6 +1,5 @@
 #include "Camera.h"
-
-#include "Renderer.h";
+#include "Renderer.h"
 
 Camera::Camera(glm::vec3 pos, glm::vec3 angles) {
 	this->position = glm::vec3(pos);

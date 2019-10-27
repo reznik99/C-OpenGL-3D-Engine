@@ -52,6 +52,19 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 		//bind texture
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, obj->textureId);
+
+		//enable texture in shader
+		int texId = glGetUniformLocation(g_EntityProgramId, "diffuseTex");
+		glUniform1i(texId, 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, obj->textureId);
+		//enable normal map in shader
+		if (obj->normalTextureId) {
+			texId = glGetUniformLocation(g_EntityProgramId, "normalTex");
+			glUniform1i(texId, 1);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, obj->normalTextureId);
+		}
 		//bind vao
 		glBindVertexArray(obj->VAO);
 		//render
