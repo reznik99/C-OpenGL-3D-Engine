@@ -43,15 +43,15 @@ void init() {
 	camera.setPosition(glm::vec3(terrainSize / 2, renderer->getTerrain()->getHeightAt(terrainSize / 2, terrainSize / 2) + camera.playerHeight, terrainSize / 2));
 
 	//set light
-	g_light = glm::vec3(terrainSize * 2, terrainSize, 25.0f);
+	g_light = glm::vec3(25.0f, terrainSize, terrainSize * 2);
 
 	//load game Entities
 	{
-		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(45, renderer->getTerrain()->getHeightAt(35, 45), 35));
+		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrainSize/3, renderer->getTerrain()->getHeightAt(terrainSize/3, terrainSize/3), terrainSize/3));
 		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.35f));
 		loadEntity("gameFiles/House.obj", "gameFiles/House.png", tempModelMatrix);
 
-		tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(40, renderer->getTerrain()->getHeightAt(28, 40), 28));
+		tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrainSize/3 + 10, renderer->getTerrain()->getHeightAt(terrainSize/3 + 10, terrainSize/3+10), terrainSize/3 + 10));
 		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.15f));
 		loadEntity("gameFiles/Well.obj", "gameFiles/Well.png", tempModelMatrix);
 

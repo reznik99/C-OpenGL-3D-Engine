@@ -374,5 +374,5 @@ float getHeight(int i, int j, unsigned char* heightMap, int height, int nrChanne
 	unsigned char b = pixelOffset[2];
 	float currentHeight = ((r + g + b) / 3.0f) / 255.0f;
 
-	return currentHeight * MAX_HEIGHT - MAX_HEIGHT;
+	return currentHeight * MAX_HEIGHT;
 }
