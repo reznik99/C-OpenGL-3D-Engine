@@ -12,12 +12,13 @@
 #include <Terrain.h>
 #include <map>
 
-
 unsigned int loadTexture(const char* textureFile);
 
 unsigned int loadCubeMapTexture(std::vector<std::string> textureFiles);
 
 Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMatrix);
+
+Entity* readOBJ_better(const char* filename, const char* textureFile, glm::mat4 modelMatrix);
 
 std::string readShader(const char* filename);
 

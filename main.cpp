@@ -26,7 +26,7 @@ glm::vec3 g_light;
 
 
 void loadEntity(const char * filename, const char* textureFile, glm::mat4 modelMatrix) {
-	Entity newEntity = *readOBJ(filename, textureFile, modelMatrix);
+	Entity newEntity = *readOBJ_better(filename, textureFile, modelMatrix);
 
 	renderer->processEntity(newEntity);
 }

@@ -1,6 +1,20 @@
 #include "Loader.h"
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
+#include <unordered_map>
+
 std::map<std::string, std::vector<unsigned int>> cache;
+
+struct Vertex {
+	glm::vec3 pos;
+	glm::vec3 normal;
+	glm::vec2 texCoord;
+
+	bool operator==(const Vertex& other) const {
+		return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
+	}
+};
 
 unsigned int loadTexture(const char* textureFile) {
 
@@ -174,6 +188,92 @@ Entity* readOBJ(const char* filename, const char* textureFile, glm::mat4 modelMa
 
 	std::vector<unsigned int> idList{ 
 		newEntity->VAO, newEntity->vertVBOId, 
+		newEntity->normVBOId, newEntity->texVBOId,
+		newEntity->textureId, newEntity->indexBufferSize
+	};
+	cache.insert(std::pair<std::string, std::vector<unsigned int>>(filename, idList));
+
+	return newEntity;
+}
+
+Entity* readOBJ_better(const char* filename, const char* textureFile, glm::mat4 modelMatrix) {
+
+	//if loaded obj before, don't load again!
+	if (cache.count(filename)) {
+		std::cout << "Cache Hit!...:  " << filename << std::endl;
+		std::vector<unsigned int> ids(cache.at(filename));
+		Entity* cachedEntity = new Entity();
+		cachedEntity->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], &modelMatrix);
+
+		return cachedEntity;
+	}
+
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string warn, err;
+
+	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename)) {
+		throw std::runtime_error(warn + err);
+	}
+
+	std::vector<Vertex> vertices;
+	std::vector<unsigned int> indices;
+
+	for (const auto& shape : shapes) {
+		for (const auto& index : shape.mesh.indices) {
+			Vertex vertex = {};
+
+			vertex.pos = {
+				attrib.vertices[3 * index.vertex_index + 0],
+				attrib.vertices[3 * index.vertex_index + 1],
+				attrib.vertices[3 * index.vertex_index + 2]
+			};
+
+			vertex.normal = {
+				attrib.normals[3 * index.normal_index + 0],
+				attrib.normals[3 * index.normal_index + 1],
+				attrib.normals[3 * index.normal_index + 2]
+			};
+
+			vertex.texCoord = {
+				attrib.texcoords[2 * index.texcoord_index + 0],
+				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+				//attrib.texcoords[2 * index.texcoord_index + 0],
+				//attrib.texcoords[2 * index.texcoord_index + 1]
+			};
+
+			vertices.push_back(vertex);
+			indices.push_back(indices.size());
+		}
+	}
+	std::vector < float > verticesOut;
+	std::vector < float > normalsOut;
+	std::vector < float > textureCoordsOut;
+
+	for (Vertex v : vertices) {
+		verticesOut.push_back(v.pos.x);
+		verticesOut.push_back(v.pos.y);
+		verticesOut.push_back(v.pos.z);
+
+		normalsOut.push_back(v.normal.x);
+		normalsOut.push_back(v.normal.y);
+		normalsOut.push_back(v.normal.z);
+
+		textureCoordsOut.push_back(v.texCoord.x);
+		textureCoordsOut.push_back(v.texCoord.y);
+	}
+
+
+	//load texture into opengl
+	unsigned int textureId = loadTexture(textureFile);
+	//save Id's to Entity
+	Entity* newEntity = new Entity(verticesOut, indices, normalsOut, textureCoordsOut, &modelMatrix, textureId);
+
+	std::cout << "Loaded Entity successfully" << std::endl;
+
+	std::vector<unsigned int> idList{
+		newEntity->VAO, newEntity->vertVBOId,
 		newEntity->normVBOId, newEntity->texVBOId,
 		newEntity->textureId, newEntity->indexBufferSize
 	};
