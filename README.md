@@ -7,21 +7,21 @@
 > I chose openGL because of previous experience with it.
 
 <p float="left" align="center">
-  <img src="readmeSrc/3.PNG" width="45%" />
+  <img src="readmeSrc/4.PNG" width="45%" />
   <img src="readmeSrc/2.PNG" width="45%" />
 </p>
 
 
 Implemented:
-* Simple 3D rendering pipeline
+* OBJ loader (cached)
 * Texture loader (texture UVs not quite right)
-* Crude FPS pov
 * Lighting (specular/diffuse/ambient) (No specular)
 * Terrain (Generate from heightmap)
-* Terrain Collision (not with player yet)
+* Terrain Collision.
+* Skybox
+* Crude FPS pov
 
 To-Be Implemented:
-* Skybox
 * Water (reflection/refraction)
 * Reflections
 * Shadows
