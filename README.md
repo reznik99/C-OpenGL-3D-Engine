@@ -7,17 +7,17 @@
 > I chose openGL because of previous experience with it.
 
 <p float="left" align="center">
-  <img src="readmeSrc/4.PNG" width="45%" />
+  <img src="readmeSrc/5.PNG" width="45%" />
   <img src="readmeSrc/2.PNG" width="45%" />
 </p>
 
 
 Implemented:
 * OBJ loader (cached)
-* Texture loader (texture UVs not quite right)
-* Lighting (specular/diffuse/ambient) (No specular)
+* Texture loader
+* Lighting (No specular)
 * Terrain (Generate from heightmap)
-* Terrain Collision.
+* Terrain Collision
 * Skybox
 * Crude FPS pov
 
