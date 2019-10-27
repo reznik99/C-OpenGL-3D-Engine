@@ -21,8 +21,8 @@ const int FPS = 60;
 const int frameDelay = 1000 / FPS;
 
 Renderer* renderer = nullptr;
-Camera camera(glm::vec3(0, 2, 6), glm::vec3(0, 0, 0));
-glm::vec3 g_light(25.0f, 20.0f, 0.0f);
+Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));
+glm::vec3 g_light;
 
 
 void loadEntity(const char * filename, const char* textureFile, glm::mat4 modelMatrix) {
@@ -41,6 +41,9 @@ void init() {
 	//place player above ground
 	float terrainSize = renderer->getTerrain()->mapSize;
 	camera.setPosition(glm::vec3(terrainSize / 2, renderer->getTerrain()->getHeightAt(terrainSize / 2, terrainSize / 2) + camera.playerHeight, terrainSize / 2));
+
+	//set light
+	g_light = glm::vec3(terrainSize * 2, terrainSize, 25.0f);
 
 	//load game Entities
 	{
@@ -81,6 +84,8 @@ int main() {
 
 	//init
 	glewInit();
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	init();
 
 	//framerate control

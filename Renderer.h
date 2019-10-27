@@ -43,7 +43,7 @@ private:
 	unsigned int cubeMapTextureId;
 	unsigned int skyboxVBO;
 
-	float SIZE = 100.0f;
+	float SIZE = 512.0f;
 	std::vector<float> VERTICES{
 		-SIZE,  SIZE, -SIZE,
 		-SIZE, -SIZE, -SIZE,

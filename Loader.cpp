@@ -18,6 +18,7 @@ unsigned int loadTexture(const char* textureFile) {
 	if (data) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1);
 	}
 	else {
 		std::cout << "Failed to load texture" << std::endl;

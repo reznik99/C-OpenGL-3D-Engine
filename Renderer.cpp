@@ -8,6 +8,7 @@ Renderer::Renderer(unsigned int width, unsigned int height) {
 	//backface culling
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
+	glEnable(GL_MULTISAMPLE);
 	/*glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);*/
 
@@ -24,18 +25,15 @@ Renderer::Renderer(unsigned int width, unsigned int height) {
 	_fragmentShaderSource = readShader("shaders/fragmentShaderSkybox.txt");
 	g_SkyboxProgramId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource, 4);
 
-	projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 150.0f);
+	projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 1000.0f);
 
-	//load skybox
+	//SKYBOX STUFF
 	this->skyboxVBO = Entity::storeDataInAttributeList(0, this->VERTICES.size(), this->VERTICES);
 
 	//read textures
 	std::vector<std::string> files = { "gameFiles/Skybox/right.png", "gameFiles/Skybox/left.png", 
 		"gameFiles/Skybox/top.png", "gameFiles/Skybox/bottom.png", "gameFiles/Skybox/back.png", "gameFiles/Skybox/front.png" };
 	this->cubeMapTextureId = loadCubeMapTexture(files);
-
-	std::cout << "EntProgram ID: " << g_EntityProgramId << std::endl;
-	std::cout << "TerProgram ID: " << g_TerrainProgramId << std::endl;
 }
 
 void Renderer::render(glm::vec3& light, Camera& camera) {
@@ -58,8 +56,6 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 		glBindVertexArray(obj->VAO);
 		//render
 		glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
-		//unbind
-		glBindVertexArray(0);
 		/*glBindBuffer(GL_ARRAY_BUFFER, obj->vertVBOId);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glDrawArrays(GL_TRIANGLES, 0, obj->indexBufferSize);
@@ -67,23 +63,23 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 	}
 
 	//RENDER TERRAINS
-	glUseProgram(g_TerrainProgramId);
+	{
+		glUseProgram(g_TerrainProgramId);
 
-	this->loadUniforms(g_TerrainProgramId, light, camera);
-	//load uniform for model matrix
-	int modelMatrixId = glGetUniformLocation(g_TerrainProgramId, "modelMatrix");
-	glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &terrain.modelMatrix[0][0]);
-	//bind texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, terrain.textureId);
-	//bind vao
-	glBindVertexArray(terrain.VAO);
-	//render
-	glDrawElements(GL_TRIANGLES, terrain.indexBufferSize, GL_UNSIGNED_INT, 0);
-	//unbind
-	glBindVertexArray(0);
-
-	glUseProgram(0);
+		this->loadUniforms(g_TerrainProgramId, light, camera);
+		//load uniform for model matrix
+		int modelMatrixId = glGetUniformLocation(g_TerrainProgramId, "modelMatrix");
+		glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &terrain.modelMatrix[0][0]);
+		//bind texture
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, terrain.textureId);
+		//bind vao
+		glBindVertexArray(terrain.VAO);
+		//render
+		glDrawElements(GL_TRIANGLES, terrain.indexBufferSize, GL_UNSIGNED_INT, 0);
+		//unbind
+		glBindVertexArray(0);
+	}
 	
 	//RENDER SKYBOX
 	{
@@ -132,6 +128,7 @@ void Renderer::loadUniforms(unsigned int _pid, glm::vec3& light, Camera& camera)
 }
 
 void Renderer::cleanUp() {
+	glDeleteBuffers(1, &this->skyboxVBO);
 	for (Entity e : this->entities) {
 		//this should be handled by a loader class that only loads obj's if unique (not implemented yet)
 		//delete VBOs

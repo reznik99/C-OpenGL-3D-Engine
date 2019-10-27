@@ -1,14 +1,22 @@
-
+#version 330 core
 in vec3 surfaceNormal;
 in vec3 toLightVector;
 in vec2 texCoords;
+in float visibility;
+
+layout(location = 0) out vec4 diffuseColor;
 
 uniform sampler2D tex;
 
 float ambientLighting = 0.1;
 float tiling = 25.0;
+vec3 skyColor = vec3(0, 0.4f, 0.7f); //should be uniform
 void main() {
+
 	float nDotl = dot(normalize(surfaceNormal), normalize(toLightVector));
 	float brightness = max(nDotl, ambientLighting);
-	gl_FragColor = vec4(brightness,brightness,brightness, 1.0) * texture2D(tex, texCoords * tiling);
+
+	diffuseColor = vec4(brightness,brightness,brightness, 1.0) * texture2D(tex, texCoords * tiling);
+
+	diffuseColor = mix(vec4(skyColor, 1.0), diffuseColor, visibility);
 }; 
