@@ -7,7 +7,7 @@
 > I chose openGL because of previous experience with it.
 
 <p float="left" align="center">
-  <img src="readmeSrc/5.PNG" width="45%" />
+  <img src="readmeSrc/6.PNG" width="45%" />
   <img src="readmeSrc/2.PNG" width="45%" />
 </p>
 
