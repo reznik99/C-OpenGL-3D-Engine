@@ -18,14 +18,17 @@ Implemented:
 * Lighting (No specular)
 * Terrain (Generate from heightmap)
 * Terrain Collision
+* Terrain blendmapping
 * Skybox
 * Crude FPS pov
 
 To-Be Implemented:
+* Normal mapping (Entity and Terrain)
 * Water (reflection/refraction)
 * Reflections
 * Shadows
 * Particle renderer
+* Networking (multiplayer)
 * LOD
 * Object Collision
 
