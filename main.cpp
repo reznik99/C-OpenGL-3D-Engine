@@ -36,7 +36,7 @@ void init() {
 
 	//generate terrain
 	glm::mat4 terrainModelMatrix = glm::translate(glm::mat4(1), glm::vec3(0, 0, 0));
-	genTerrain("gameFiles/Heightmap.png", "gameFiles/Rock.png", terrainModelMatrix, renderer->getTerrain());
+	genTerrain("gameFiles/heightmap2_scaled.png", "gameFiles/Rock.png", terrainModelMatrix, renderer->getTerrain());
 
 	//place player above ground
 	float terrainSize = renderer->getTerrain()->mapSize;
@@ -55,14 +55,22 @@ void init() {
 		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.15f));
 		loadEntity("gameFiles/Well.obj", "gameFiles/Well.png", nullptr, tempModelMatrix);
 
-		int numOfTrees = 10;
+		tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrainSize / 3 + 12, renderer->getTerrain()->getHeightAt(terrainSize / 3 + 12, terrainSize / 3 + 12), terrainSize / 3 + 12));
+		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.5f));
+		loadEntity("gameFiles/grass.obj", "gameFiles/grass.png", nullptr, tempModelMatrix);
+
+		int numOfTrees = 250;
 		for (int i = 0; i < numOfTrees; i++) {
-			int x = rand() % (int)terrainSize + 1;
-			int z = rand() % (int)terrainSize + 1;
+			int x = rand() % (int)terrainSize;
+			int z = rand() % (int)terrainSize;
 			float scale = (rand() % 10) / 10.0f + 0.15f;
 			tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(x, renderer->getTerrain()->getHeightAt(z, x), z));
 			tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(scale));
-			loadEntity("gameFiles/Palm.obj", "gameFiles/Palm.png", nullptr, tempModelMatrix);
+			tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians((float)(rand() %  360)), glm::vec3(0, 1, 0));
+			tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians((float)(rand() % 25)), glm::vec3(1, 0, 0));
+			tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians((float)(rand() % 25)), glm::vec3(0, 0, 1));
+			if(i< numOfTrees/2) loadEntity("gameFiles/Palm2_low.obj", "gameFiles/Palm2.jpg", nullptr, tempModelMatrix);
+			else loadEntity("gameFiles/Palm.obj", "gameFiles/Palm.png", nullptr, tempModelMatrix);
 		}
 	}
 }
