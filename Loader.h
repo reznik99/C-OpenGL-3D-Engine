@@ -24,7 +24,7 @@ void cacheEntity(Entity* newEntity, const char* filename);
 
 std::string readShader(const char* filename);
 
-void genTerrain(const char* heightMapFile, const char* textureFile1, glm::mat4 modelMatrix, Terrain* newTerrain);
+void genTerrain(const char* heightMapFile, std::vector<std::string> textures, glm::mat4 modelMatrix, Terrain* newTerrain);
 
 glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT);
 

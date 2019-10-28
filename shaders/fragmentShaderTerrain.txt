@@ -1,4 +1,5 @@
 #version 330 core
+
 in vec3 surfaceNormal;
 in vec3 toLightVector;
 in vec2 texCoords;
@@ -6,17 +7,33 @@ in float visibility;
 
 layout(location = 0) out vec4 diffuseColor;
 
-uniform sampler2D tex;
+uniform sampler2D blendMapTex;
+uniform sampler2D tex1;
+uniform sampler2D tex2;
+uniform sampler2D tex3;
+uniform sampler2D tex4;
 
 float ambientLighting = 0.2;
 float tiling = 25.0;
 vec3 skyColor = vec3(0, 0.4f, 0.7f); //should be uniform
-void main() {
 
+void main() {
+	//shading
 	float nDotl = dot(normalize(surfaceNormal), normalize(toLightVector));
 	float brightness = max(nDotl, ambientLighting);
 
-	diffuseColor = vec4(brightness,brightness,brightness, 1.0) * texture2D(tex, texCoords * tiling);
+	//blendmap
+	vec4 blendMapColour = texture(blendMapTex, texCoords);
+ 	float backTextureAmount = 1 - (blendMapColour.r + blendMapColour.g + blendMapColour.b);
+ 	vec2 tiledCoords = texCoords * tiling;
 
+	vec4 tex1Col = texture2D(tex1, tiledCoords) * backTextureAmount;
+	vec4 tex2Col = texture2D(tex2, tiledCoords) * blendMapColour.r;
+	vec4 tex3Col = texture2D(tex3, tiledCoords) * blendMapColour.g;
+	vec4 tex4Col = texture2D(tex4, tiledCoords) * blendMapColour.b;
+
+	vec4 totalColour = tex1Col + tex2Col + tex3Col + tex4Col;
+
+	diffuseColor = vec4(brightness,brightness,brightness, 1.0) * totalColour;
 	diffuseColor = mix(vec4(skyColor, 1.0), diffuseColor, visibility);
 }; 

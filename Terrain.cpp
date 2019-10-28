@@ -5,7 +5,7 @@ Terrain::Terrain() {
 }
 
 void Terrain::load(std::vector<float>& _data, std::vector<unsigned int>& _indices, std::vector<float>& _normals,
-	std::vector<float>& _texCoords, glm::mat4& _modelMatrix, unsigned int textureId, std::vector<std::vector<float>>& _heights) {
+	std::vector<float>& _texCoords, glm::mat4& _modelMatrix, std::vector<int> &textureIds, std::vector<std::vector<float>>& _heights) {
 
 	unsigned int _indexBufferId = 0;
 	// create VAO
@@ -23,7 +23,7 @@ void Terrain::load(std::vector<float>& _data, std::vector<unsigned int>& _indice
 	//textureCoords
 	this->texVBOId = Terrain::storeDataInAttributeList(2, 2, _texCoords);
 
-	this->textureId = textureId;
+	this->textureIds = textureIds;
 	this->indexBufferSize = _indices.size();
 	this->modelMatrix = _modelMatrix;
 

@@ -289,7 +289,7 @@ std::string readShader(const char* filename) {
 		(std::istreambuf_iterator<char>()));
 }
 
-void genTerrain(const char* heightMapFile, const char* textureFile1, glm::mat4 modelMatrix, Terrain* newTerrain) {
+void genTerrain(const char* heightMapFile, std::vector<std::string> textures , glm::mat4 modelMatrix, Terrain* newTerrain) {
 	std::cout << "Generating terrain with heightmap :  " << heightMapFile << std::endl;
 
 	//read heightMapFile
@@ -349,10 +349,12 @@ void genTerrain(const char* heightMapFile, const char* textureFile1, glm::mat4 m
 	}
 
 	//Read textures (normal, textures, blendmap)
-	int texId = loadTexture(textureFile1);
+	std::vector<int> textureIds(5);
+	for (int i = 0; i < textures.size(); i++)
+		textureIds[i] = loadTexture(textures.at(i).c_str());
 
 	//load Terrain with data
-	newTerrain->load(vertices, indices, normals, uvs, modelMatrix, texId, heights);
+	newTerrain->load(vertices, indices, normals, uvs, modelMatrix, textureIds, heights);
 
 	stbi_image_free(data);
 }

@@ -35,8 +35,10 @@ void init() {
 	renderer = new Renderer(width, height);
 
 	//generate terrain
+	std::vector<std::string> terrainTextures{ "gameFiles/Terrain/Blendmap.png", "gameFiles/Terrain/Rock.png", 
+		"gameFiles/Terrain/Grass.png", "gameFiles/Terrain/Path.png", "gameFiles/Terrain/Sand.png" };
 	glm::mat4 terrainModelMatrix = glm::translate(glm::mat4(1), glm::vec3(0, 0, 0));
-	genTerrain("gameFiles/heightmap2_scaled.png", "gameFiles/Rock.png", terrainModelMatrix, renderer->getTerrain());
+	genTerrain("gameFiles/Terrain/heightmap2_scaled.png", terrainTextures, terrainModelMatrix, renderer->getTerrain());
 
 	//place player above ground
 	float terrainSize = renderer->getTerrain()->mapSize;

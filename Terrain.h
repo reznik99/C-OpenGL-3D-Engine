@@ -12,7 +12,7 @@ public:
 	Terrain();
 
 	void load(std::vector<float>& _data, std::vector<unsigned int>& _indices, std::vector<float>& _normals,
-		std::vector<float>& _texCoords, glm::mat4& _modelMatrix, unsigned int textureId, std::vector<std::vector<float>>& _heights);
+		std::vector<float>& _texCoords, glm::mat4& _modelMatrix, std::vector<int> &textureIds, std::vector<std::vector<float>>& _heights);
 
 	static unsigned int storeDataInAttributeList(int attributeNumber, int coordinateSize, std::vector<float>& _data);
 	float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos);
@@ -20,7 +20,7 @@ public:
 	float getHeightAt(int x, int z);
 
 	const float mapSize = 200;
-	const float MAX_HEIGHT = 200;
+	const float MAX_HEIGHT = 100;
 
 	unsigned int VAO = 0;
 
@@ -28,7 +28,7 @@ public:
 	unsigned int normVBOId = 0;
 	unsigned int texVBOId = 0;
 
-	unsigned int textureId = 0;
+	std::vector<int> textureIds;
 	unsigned int indexBufferSize = 0;
 
 	glm::mat4 modelMatrix; //position, rotation and scale of entity

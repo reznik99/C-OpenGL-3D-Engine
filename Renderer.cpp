@@ -83,9 +83,16 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 		//load uniform for model matrix
 		int modelMatrixId = glGetUniformLocation(g_TerrainProgramId, "modelMatrix");
 		glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &terrain.modelMatrix[0][0]);
+		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "blendMapTex"), 0);
+		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex1"), 1);
+		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex2"), 2);
+		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex3"), 3);
+		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex4"), 4);
 		//bind texture
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, terrain.textureId);
+		for (int i = 0; i < terrain.textureIds.size(); i++) {
+			glActiveTexture(GL_TEXTURE0 + i);
+			glBindTexture(GL_TEXTURE_2D, terrain.textureIds.at(i));
+		}
 		//bind vao
 		glBindVertexArray(terrain.VAO);
 		//render
