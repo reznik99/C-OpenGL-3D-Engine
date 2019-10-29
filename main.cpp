@@ -12,6 +12,7 @@
 #include <STB/stb_image.h>
 #include "Loader.h"
 #include <Renderer.h>
+#include <TCPClient.h>
 
 #undef main
 
@@ -86,6 +87,7 @@ void cleanUp(SDL_Window* _window, SDL_GLContext _context) {
 }
 
 int main() {
+	TCPClient* client = new TCPClient("127.0.0.1", "8080");
 	//set up window
 	SDL_Window* _window = SDL_CreateWindow("OpenGL Engine", 
 		600, 50, width, height, SDL_WINDOW_OPENGL);
@@ -115,6 +117,8 @@ int main() {
 		renderer->update();
 		camera.update(renderer);
 
+		client->update(camera.getPosition());
+
 		//render
 		renderer->render(g_light, camera);
 
@@ -129,6 +133,7 @@ int main() {
 	}
 
 	cleanUp(_window, _context);
+	client->cleanUp();
 
 	return 0;
 }

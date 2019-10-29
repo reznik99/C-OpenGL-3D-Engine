@@ -23,10 +23,7 @@ public:
 	const float MAX_HEIGHT = 100;
 
 	unsigned int VAO = 0;
-
-	unsigned int vertVBOId = 0;
-	unsigned int normVBOId = 0;
-	unsigned int texVBOId = 0;
+	std::vector<unsigned int> VBOs;
 
 	std::vector<int> textureIds;
 	unsigned int indexBufferSize = 0;

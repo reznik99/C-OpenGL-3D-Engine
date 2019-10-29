@@ -21,10 +21,7 @@ public:
 	int update();
 
 	unsigned int VAO = 0;
-
-	unsigned int vertVBOId = 0;
-	unsigned int normVBOId = 0;
-	unsigned int texVBOId = 0;
+	std::vector<unsigned int> VBOs;
 
 	unsigned int textureId = 0;
 	unsigned int normalTextureId = 0;

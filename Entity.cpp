@@ -18,11 +18,11 @@ Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, s
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(unsigned int), &_indices[0], GL_STATIC_DRAW); //STREAM_DRAW and DYNAMIC_DRAW
 	//vertices
-	this->vertVBOId = Entity::storeDataInAttributeList(0, 3, _data);
+	this->VBOs.push_back(Entity::storeDataInAttributeList(0, 3, _data));
 	//normals
-	this->normVBOId = Entity::storeDataInAttributeList(1, 3, _normals);
+	this->VBOs.push_back(Entity::storeDataInAttributeList(1, 3, _normals));
 	//textureCoords
-	this->texVBOId = Entity::storeDataInAttributeList(2, 2, _texCoords);
+	this->VBOs.push_back(Entity::storeDataInAttributeList(2, 2, _texCoords));
 
 	this->textureId = textureId;
 	this->normalTextureId = normalTextureId;
@@ -44,9 +44,9 @@ void Entity::loadCached(unsigned int _VAO, unsigned int _vertVBOId, unsigned int
 	unsigned int _texVBOId, unsigned int _indexBufferSize, unsigned int _textureId, unsigned int _normalTextureId, glm::mat4* _modelMatrix ) {
 
 	this->VAO = _VAO;
-	this->vertVBOId = _vertVBOId;
-	this->normVBOId = _normVBOId;
-	this->texVBOId = _texVBOId;
+	this->VBOs.push_back(_vertVBOId);
+	this->VBOs.push_back(_normVBOId);
+	this->VBOs.push_back(_texVBOId);
 	this->textureId = _textureId;
 	this->normalTextureId = _normalTextureId;
 	this->indexBufferSize = _indexBufferSize;

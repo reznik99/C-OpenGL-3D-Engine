@@ -27,7 +27,7 @@ Renderer::Renderer(unsigned int width, unsigned int height) {
 
 	projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 1000.0f);
 
-	//SKYBOX STUFF
+	//SKYBOX
 	this->skyboxVBO = Entity::storeDataInAttributeList(0, this->VERTICES.size(), this->VERTICES);
 
 	//read textures
@@ -41,38 +41,35 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//RENDER ENTITIES
-	glUseProgram(g_EntityProgramId);
-	this->loadUniforms(g_EntityProgramId, light, camera);
+	{
+		glUseProgram(g_EntityProgramId);
+		this->loadUniforms(g_EntityProgramId, light, camera);
 
-	for (unsigned int i = 0; i < entities.size(); i++) {
-		Entity* obj = &entities[i];
-		//load uniform for model matrix
-		int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
-		glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj->modelMatrix[0][0]);
-		//bind texture
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, obj->textureId);
+		for (unsigned int i = 0; i < entities.size(); i++) {
+			Entity* obj = &entities[i];
+			//load uniform for model matrix
+			int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
+			glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj->modelMatrix[0][0]);
+			//bind texture
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, obj->textureId);
 
-		//enable texture in shader
-		int texId = glGetUniformLocation(g_EntityProgramId, "diffuseTex");
-		glUniform1i(texId, 0);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, obj->textureId);
-		//enable normal map in shader
-		if (obj->normalTextureId) {
-			texId = glGetUniformLocation(g_EntityProgramId, "normalTex");
-			glUniform1i(texId, 1);
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, obj->normalTextureId);
+			//enable texture in shader
+			glUniform1i(glGetUniformLocation(g_EntityProgramId, "diffuseTex"), 0);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, obj->textureId);
+			//enable normal map in shader
+			if (obj->normalTextureId) {
+				glUniform1i(glGetUniformLocation(g_EntityProgramId, "normalTex"), 1);
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, obj->normalTextureId);
+			}
+			//bind vao
+			glBindVertexArray(obj->VAO);
+			//render
+			glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
 		}
-		//bind vao
-		glBindVertexArray(obj->VAO);
-		//render
-		glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
-		/*glBindBuffer(GL_ARRAY_BUFFER, obj->vertVBOId);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glDrawArrays(GL_TRIANGLES, 0, obj->indexBufferSize);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);*/
 	}
 
 	//RENDER TERRAINS
@@ -148,20 +145,28 @@ void Renderer::loadUniforms(unsigned int _pid, glm::vec3& light, Camera& camera)
 }
 
 void Renderer::cleanUp() {
-	glDeleteBuffers(1, &this->skyboxVBO);
+	//delete entities
 	for (Entity e : this->entities) {
-		//this should be handled by a loader class that only loads obj's if unique (not implemented yet)
 		//delete VBOs
-		glDeleteBuffers(1, &e.vertVBOId);
-		glDeleteBuffers(1, &e.normVBOId);
-		glDeleteBuffers(1, &e.texVBOId);
+		for(unsigned int _id : e.VBOs)
+			glDeleteBuffers(1, &_id);
 		//delete VAO
 		glDeleteVertexArrays(1, &e.VAO);
 	}
 	entities.clear(); //calls deconstructor in all entities
 
+	//delete skybox data
+	glDeleteBuffers(1, &this->skyboxVBO);
+
+	//delete terrain data
+	for (unsigned int _id : terrain.VBOs)
+		glDeleteBuffers(1, &_id);
+	glDeleteVertexArrays(1, &terrain.VAO);
+
+	//delete shaders
 	for (unsigned int _id : shaderIds)
 		glDeleteShader(_id);
+	//deletePrograms
 	glDeleteProgram(g_EntityProgramId);
 	glDeleteProgram(g_TerrainProgramId);
 	glDeleteProgram(g_SkyboxProgramId);

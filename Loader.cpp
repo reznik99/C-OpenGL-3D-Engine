@@ -275,8 +275,8 @@ Entity* readOBJ_better(const char* filename, const char* textureFile, const char
 
 void cacheEntity(Entity* newEntity, const char* filename) {
 	std::vector<unsigned int> idList{
-		newEntity->VAO, newEntity->vertVBOId,
-		newEntity->normVBOId, newEntity->texVBOId,
+		newEntity->VAO, newEntity->VBOs.at(0),
+		newEntity->VBOs.at(1), newEntity->VBOs.at(2),
 		newEntity->indexBufferSize,
 		newEntity->textureId, newEntity->normalTextureId,
 	};

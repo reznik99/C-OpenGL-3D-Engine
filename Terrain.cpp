@@ -17,11 +17,11 @@ void Terrain::load(std::vector<float>& _data, std::vector<unsigned int>& _indice
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(unsigned int), &_indices[0], GL_STATIC_DRAW); //STREAM_DRAW and DYNAMIC_DRAW
 	//vertices
-	this->vertVBOId = Terrain::storeDataInAttributeList(0, 3, _data);
+	this->VBOs.push_back(Terrain::storeDataInAttributeList(0, 3, _data));
 	//normals
-	this->normVBOId = Terrain::storeDataInAttributeList(1, 3, _normals);
+	this->VBOs.push_back(Terrain::storeDataInAttributeList(1, 3, _normals));
 	//textureCoords
-	this->texVBOId = Terrain::storeDataInAttributeList(2, 2, _texCoords);
+	this->VBOs.push_back(Terrain::storeDataInAttributeList(2, 2, _texCoords));
 
 	this->textureIds = textureIds;
 	this->indexBufferSize = _indices.size();
