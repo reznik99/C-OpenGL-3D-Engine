@@ -17,13 +17,14 @@
 #undef main
 
 //globals
-const unsigned int width = 1280, height = 720;
+const unsigned int width = 900, height = 600;
 const int FPS = 60;
 const int frameDelay = 1000 / FPS;
 
 Renderer* renderer = nullptr;
 Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));
 glm::vec3 g_light;
+
 
 
 void loadEntity(const char * filename, const char* textureFile, const char* textureNormalFile, glm::mat4 modelMatrix) {
@@ -62,7 +63,15 @@ void init() {
 		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.5f));
 		loadEntity("gameFiles/grass.obj", "gameFiles/grass.png", nullptr, tempModelMatrix);
 
-		int numOfTrees = 250;
+		//load other player
+		renderer->playerPos = glm::vec3(terrainSize / 2, renderer->getTerrain()->getHeightAt(terrainSize / 2, terrainSize / 2) + camera.playerHeight, terrainSize / 2);
+		tempModelMatrix = glm::translate(glm::mat4(1), renderer->playerPos);
+		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(1.0f));
+		Entity *player = readOBJ_better("gameFiles/Player.obj", "gameFiles/Character.jpg", nullptr, tempModelMatrix);
+		renderer->player = *player;
+		renderer->processEntity(renderer->player);
+
+		int numOfTrees = 0;
 		for (int i = 0; i < numOfTrees; i++) {
 			int x = rand() % (int)terrainSize;
 			int z = rand() % (int)terrainSize;
@@ -105,6 +114,7 @@ int main() {
 	int frameTime;
 
 	//main loop
+	int timer = 0;
 	while (1) {
 		bool _break = false;
 		frameStart = SDL_GetTicks();
@@ -116,9 +126,12 @@ int main() {
 		//update
 		renderer->update();
 		camera.update(renderer);
-
-		client->update(camera.getPosition());
-
+		timer++;
+		if (timer%2==0) {
+			glm::vec3 newPos = client->update(camera.getPosition());
+			renderer->playerPos = newPos;
+			timer = 1;
+		}
 		//render
 		renderer->render(g_light, camera);
 

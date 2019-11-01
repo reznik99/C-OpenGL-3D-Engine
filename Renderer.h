@@ -26,6 +26,9 @@ public:
 	unsigned int createShaderProgram(const std::string& vertexShaderSource,
 		const std::string& fragmentShaderSource, unsigned int index);
 
+	Entity player;
+	glm::vec3 playerPos;
+
 private:
 	const float FOV = 75.0f;
 

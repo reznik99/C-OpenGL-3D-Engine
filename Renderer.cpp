@@ -47,6 +47,9 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 
 		for (unsigned int i = 0; i < entities.size(); i++) {
 			Entity* obj = &entities[i];
+			if (i == 3)
+				obj = &this->player;
+
 			//load uniform for model matrix
 			int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
 			glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj->modelMatrix[0][0]);
@@ -127,6 +130,10 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 void Renderer::update() {
 	for (Entity e : this->entities)
 		e.update();
+
+	//update player position (subtract player height from y pos
+	glm::mat4 newModelMatrix(glm::translate(glm::mat4(1), glm::vec3(this->playerPos.x, this->playerPos.y - 2.5, this->playerPos.z)));
+	this->player.modelMatrix = newModelMatrix;
 }
 
 void Renderer::processEntity(Entity e) {

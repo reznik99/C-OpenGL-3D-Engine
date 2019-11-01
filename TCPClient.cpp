@@ -1,5 +1,6 @@
 #include "TCPClient.h"
-
+#include <stdlib.h>
+#include <iostream>
 
 TCPClient::TCPClient(const char* ip, const char* PORT) {
 
@@ -51,9 +52,11 @@ TCPClient::TCPClient(const char* ip, const char* PORT) {
 	//connected, can now send data
 }
 
-std::vector<glm::vec3> TCPClient::update(glm::vec3 position) {
+glm::vec3 TCPClient::update(glm::vec3 position) {
 	// Send an initial buffer
-	sendbuf = glm::to_string(position);
+	sendbuf = std::to_string(position.x) + " "
+		+ std::to_string(position.y) + " "
+		+ std::to_string(position.z) + ",";
 
 	iResult = send(ConnectSocket, sendbuf.data(), sendbuf.size(), 0);
 	if (iResult == SOCKET_ERROR) {
@@ -64,7 +67,8 @@ std::vector<glm::vec3> TCPClient::update(glm::vec3 position) {
 
 	printf("Bytes Sent: %ld , sent:%s\n", iResult, sendbuf.c_str());
 
-	// Receive until the peer closes the connection
+	// This will block thread if nothing is recieved! to be fixed
+	iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
 	/*do {
 
 		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
@@ -75,9 +79,11 @@ std::vector<glm::vec3> TCPClient::update(glm::vec3 position) {
 		else
 			printf("recv failed with error: %d\n", WSAGetLastError());
 
-	} while (iResult > 0);
+	} while (iResult > 0);*/
 
-	return std::vector<glm::vec3>();*/
+	printf("Recieved: %s \n", recvbuf);
+	glm::vec3 output = readBufToVectors(recvbuf);
+	return output;
 }
 
 void TCPClient::cleanUp() {
@@ -89,4 +95,16 @@ void TCPClient::cleanUp() {
 	}
 	closesocket(ConnectSocket);
 	WSACleanup();
+}
+
+glm::vec3 TCPClient::readBufToVectors(const char * buffer) {
+	//for now read only first 3 values (one vector) Data is CSV
+	
+	char* pEnd;
+	float x = strtof(buffer, &pEnd);
+	float y = strtof(pEnd, &pEnd);
+	float z = strtof(pEnd, &pEnd);
+	return glm::vec3(x, y, z);
+	//std::cout << glm::to_string(position) << std::endl;
+	//printf("buffer = %s \n", buffer);
 }
