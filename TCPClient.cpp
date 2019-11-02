@@ -52,11 +52,12 @@ TCPClient::TCPClient(const char* ip, const char* PORT) {
 	//connected, can now send data
 }
 
-glm::vec3 TCPClient::update(glm::vec3 position) {
+glm::vec4 TCPClient::update(glm::vec3 position, float yaw) {
 	// Send an initial buffer
 	sendbuf = std::to_string(position.x) + " "
 		+ std::to_string(position.y) + " "
-		+ std::to_string(position.z) + ",";
+		+ std::to_string(position.z) + " "
+		+ std::to_string(yaw) + ",";
 
 	iResult = send(ConnectSocket, sendbuf.data(), sendbuf.size(), 0);
 	if (iResult == SOCKET_ERROR) {
@@ -82,7 +83,7 @@ glm::vec3 TCPClient::update(glm::vec3 position) {
 	} while (iResult > 0);*/
 
 	printf("Recieved: %s \n", recvbuf);
-	glm::vec3 output = readBufToVectors(recvbuf);
+	glm::vec4 output = readBufToVectors(recvbuf);
 	return output;
 }
 
@@ -97,14 +98,12 @@ void TCPClient::cleanUp() {
 	WSACleanup();
 }
 
-glm::vec3 TCPClient::readBufToVectors(const char * buffer) {
-	//for now read only first 3 values (one vector) Data is CSV
-	
+glm::vec4 TCPClient::readBufToVectors(const char * buffer) {
+	//for now read only first 4 values (one vector) Data is CSV
 	char* pEnd;
 	float x = strtof(buffer, &pEnd);
 	float y = strtof(pEnd, &pEnd);
 	float z = strtof(pEnd, &pEnd);
-	return glm::vec3(x, y, z);
-	//std::cout << glm::to_string(position) << std::endl;
-	//printf("buffer = %s \n", buffer);
+	float yaw = strtof(pEnd, &pEnd);
+	return glm::vec4(x, y, z, yaw);
 }

@@ -131,3 +131,7 @@ void Camera::setPosition(glm::vec3 pos) {
 	this->position = pos;
 }
 
+glm::vec3 Camera::getAngles() {
+	return this->angles;
+}
+

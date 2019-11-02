@@ -53,15 +53,12 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 			//load uniform for model matrix
 			int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
 			glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj->modelMatrix[0][0]);
-			//bind texture
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, obj->textureId);
 
-			//enable texture in shader
+			//bind diffuse tex
 			glUniform1i(glGetUniformLocation(g_EntityProgramId, "diffuseTex"), 0);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, obj->textureId);
-			//enable normal map in shader
+			//bind normal map
 			if (obj->normalTextureId) {
 				glUniform1i(glGetUniformLocation(g_EntityProgramId, "normalTex"), 1);
 				glActiveTexture(GL_TEXTURE1);
@@ -133,6 +130,7 @@ void Renderer::update() {
 
 	//update player position (subtract player height from y pos
 	glm::mat4 newModelMatrix(glm::translate(glm::mat4(1), glm::vec3(this->playerPos.x, this->playerPos.y - 2.5, this->playerPos.z)));
+	newModelMatrix = glm::rotate(newModelMatrix, glm::radians(this->playerPos.a), glm::vec3(0, 1, 0));
 	this->player.modelMatrix = newModelMatrix;
 }
 

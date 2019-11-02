@@ -3,14 +3,15 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <map>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <GL\glew.h>
 #include <STB\stb_image.h>
-#include <Entity.h>
-#include <Terrain.h>
-#include <map>
+#include "Entity.h"
+#include "Terrain.h"
+
 
 unsigned int loadTexture(const char* textureFile);
 

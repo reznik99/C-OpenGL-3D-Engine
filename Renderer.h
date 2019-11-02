@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
-#include <Terrain.h>
-#include <Entity.h>
-#include <Camera.h>
-#include <Loader.h>
+#include "Terrain.h"
+#include "Entity.h"
+#include "Camera.h"
+#include "Loader.h"
 
 class Renderer
 {
@@ -27,7 +27,7 @@ public:
 		const std::string& fragmentShaderSource, unsigned int index);
 
 	Entity player;
-	glm::vec3 playerPos;
+	glm::vec4 playerPos;
 
 private:
 	const float FOV = 75.0f;

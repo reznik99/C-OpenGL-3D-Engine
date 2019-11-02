@@ -24,9 +24,9 @@ class TCPClient {
 public:
 	TCPClient(const char* ip, const char* PORT);
 
-	glm::vec3 update(glm::vec3 position);
+	glm::vec4 update(glm::vec3 position, float yaw);
 
-	glm::vec3 readBufToVectors(const char* buffer);
+	glm::vec4 readBufToVectors(const char* buffer);
 
 	void cleanUp();
 

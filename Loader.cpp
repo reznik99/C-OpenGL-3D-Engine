@@ -1,7 +1,7 @@
 #include "Loader.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
+#include <tinyobjloader/tiny_obj_loader.h>
 
 std::map<std::string, std::vector<unsigned int>> cache;
 
@@ -258,8 +258,11 @@ Entity* readOBJ_better(const char* filename, const char* textureFile, const char
 	}
 
 
-	//load texture into opengl
-	unsigned int textureId = loadTexture(textureFile);
+	//load diffuse texture into opengl
+	unsigned int textureId = -1;
+	if (textureFile != nullptr)
+		textureId = loadTexture(textureFile);
+	//load normal/bump texture into opengl
 	unsigned int textureNormalId = -1;
 	if(textureNormalFile != nullptr)
 		textureNormalId = loadTexture(textureNormalFile);
@@ -288,6 +291,8 @@ std::string readShader(const char* filename) {
 	return std::string((std::istreambuf_iterator<char>(ifs)),
 		(std::istreambuf_iterator<char>()));
 }
+
+/* TERRAIN */
 
 void genTerrain(const char* heightMapFile, std::vector<std::string> textures , glm::mat4 modelMatrix, Terrain* newTerrain) {
 	std::cout << "Generating terrain with heightmap :  " << heightMapFile << std::endl;

@@ -22,6 +22,8 @@ public:
 
 	glm::vec3 getPosition();
 	void setPosition(glm::vec3 pos);
+	
+	glm::vec3 getAngles();
 
 	bool moveForward;
 	bool moveRight;
@@ -33,9 +35,9 @@ public:
 
 	float playerHeight = 2.5;
 	bool jumped = false;
-	const float GRAVITY = 9.81f / 60.0f / 10.0f;
-	const float JUMP_POWER = 0.3f;
-	const float MAX_SPEED = 0.5f;
+	const float GRAVITY = 9.81f / 60.0f / 11.0f;
+	const float JUMP_POWER = 0.4f;
+	const float MAX_SPEED = 0.25f;
 
 private:
 	glm::vec3 position;
