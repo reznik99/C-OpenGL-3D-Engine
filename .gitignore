@@ -1,3 +1,11 @@
+#game models
+gameFiles/
+
+#Visual studio stuff
+Debug/*
+Release/*
+*vcxproj*
+
 # Prerequisites
 *.d
 

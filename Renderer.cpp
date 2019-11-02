@@ -13,16 +13,16 @@ Renderer::Renderer(unsigned int width, unsigned int height) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);*/
 
 	//Entity shaders and program
-	std::string _vertexShaderSource = readShader("shaders/vertexShaderEntities.txt");
-	std::string _fragmentShaderSource = readShader("shaders/fragmentShaderEntities.txt");
+	std::string _vertexShaderSource = readShader("shaders/vertexShaderEntities.glsl");
+	std::string _fragmentShaderSource = readShader("shaders/fragmentShaderEntities.glsl");
 	g_EntityProgramId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource, 0);
 	//Terrain shaders and program
-	_vertexShaderSource = readShader("shaders/vertexShaderTerrain.txt");
-	_fragmentShaderSource = readShader("shaders/fragmentShaderTerrain.txt");
+	_vertexShaderSource = readShader("shaders/vertexShaderTerrain.glsl");
+	_fragmentShaderSource = readShader("shaders/fragmentShaderTerrain.glsl");
 	g_TerrainProgramId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource, 2);
 	//Skybox shaders and program
-	_vertexShaderSource = readShader("shaders/vertexShaderSkybox.txt");
-	_fragmentShaderSource = readShader("shaders/fragmentShaderSkybox.txt");
+	_vertexShaderSource = readShader("shaders/vertexShaderSkybox.glsl");
+	_fragmentShaderSource = readShader("shaders/fragmentShaderSkybox.glsl");
 	g_SkyboxProgramId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource, 4);
 
 	projectionMatrix = glm::perspective(glm::radians(FOV), (float)width / (float)height, 0.1f, 1000.0f);

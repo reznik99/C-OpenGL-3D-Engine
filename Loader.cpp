@@ -180,7 +180,7 @@ Entity* readOBJ(const char* filename, const char* textureFile, const char* textu
 
 	//load texture into opengl
 	unsigned int textureId = loadTexture(textureFile);
-	unsigned int textureNormalId;
+	unsigned int textureNormalId = -1;
 	if(textureNormalFile != nullptr)
 		textureNormalId = loadTexture(textureNormalFile);
 	//save Id's to Entity

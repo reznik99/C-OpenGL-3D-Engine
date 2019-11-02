@@ -9,9 +9,10 @@ in vec3 vertex;
 in vec3 normal;
 in vec2 textureCoords;
 
-out vec3 toLightVector;
-out vec3 surfaceNormal;
 out vec2 texCoords;
+out vec3 surfaceNormal;
+out vec3 toLightVector;
+out vec3 toCameraVector;
 out float visibility;
 
 const float density = 0.004;
@@ -22,9 +23,12 @@ void main() {
 	vec4 worldPosition = modelMatrix * vec4(vertex, 1.0);
 	vec4 positionRelativeToCam = viewMatrix * worldPosition;
 	gl_Position = projMatrix * positionRelativeToCam;
+
 	//lighting
 	surfaceNormal = (modelMatrix * vec4(normal, 0.0)).xyz;
 	toLightVector = lightPosition - worldPosition.xyz;
+	toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
+
 	//distance fade
 	float distance = length(positionRelativeToCam.xyz);
 	visibility = exp(-pow((distance*density), gradient));
