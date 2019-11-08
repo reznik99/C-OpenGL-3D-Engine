@@ -24,7 +24,7 @@ void main() {
 	vec4 positionRelativeToCam = viewMatrix * worldPosition;
 	gl_Position = projMatrix * positionRelativeToCam;
 
-	//lighting
+	//lighting (world space)
 	surfaceNormal = (modelMatrix * vec4(normal, 0.0)).xyz;
 	toLightVector = lightPosition - worldPosition.xyz;
 	toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;

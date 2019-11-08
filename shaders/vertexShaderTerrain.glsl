@@ -24,10 +24,13 @@ void main() {
 	vec4 positionRelativeToCam = viewMatrix * worldPosition;
 	gl_Position = projMatrix * positionRelativeToCam;
 
-	//lighting
+	//lighting (world space)
 	surfaceNormal = (modelMatrix * vec4(normal, 0.0)).xyz;
 	toLightVector = lightPosition - worldPosition.xyz;
 	toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
+	// is equal to -> last row of inverted view matrix is camera position!
+	/*mat4 inverseV = inverse(viewMatrix);
+	toCameraVector = vec3(inverseV[3][0], inverseV[3][1], inverseV[3][2]) - worldPosition.xyz;*/
 
 	//distance fade
 	float distance = length(positionRelativeToCam.xyz);

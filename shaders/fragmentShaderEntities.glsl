@@ -11,17 +11,16 @@ layout(location = 0) out vec4 outColor;
 uniform sampler2D diffuseTex;
 
 float ambientLighting = 0.2f;
-float specularStrength = 0.5f;
+float specularStrength = 0.5f;    //Should read from specular map
+float shininess = 32.0f;			
 vec3 skyColor = vec3(0, 0.4f, 0.7f); //should be uniform
 vec3 lightColor = vec3(1f, 0.9f, 0.9f); //should be uniform
 
 void main() {
-	//lighting calc
+	//normalize them
 	vec3 unitNormal = normalize(surfaceNormal);
 	vec3 unitLightVector = normalize(toLightVector);
-
-	float nDotl = dot(unitNormal, unitLightVector);
-	float brightness = max(nDotl, 0.0);
+	vec3 unitVectorToCamera = normalize(toCameraVector);
 
 	//Textures
 	vec4 textureColor = texture2D(diffuseTex, texCoords);
@@ -29,14 +28,16 @@ void main() {
 		discard; //fake transparency for grass
 	}
 
-	//Phong lighting
+	/* Phong lighting (done in WORLD space) */
+	// Ambient
 	vec3 ambient = ambientLighting * lightColor;
+	// Diffuse
+	float brightness = max(0.0, dot(unitNormal, unitLightVector));
 	vec3 diffuse = brightness * lightColor;
-	//Specular lighting (done in view space)
-	vec3 unitVectorToCamera = normalize(toCameraVector);
-	vec3 lightDirection = -unitLightVector;// -unitVectorToCamera; //which one right??
+	// Specular lighting 
+	vec3 lightDirection = -unitLightVector; 
 	vec3 reflectedLightDirection = reflect(lightDirection, unitNormal);
-	float spec = pow(max(dot(unitVectorToCamera, reflectedLightDirection), 0.0), 32); //32 is shineness
+	float spec = pow(max(dot(unitVectorToCamera, reflectedLightDirection), 0.0), shininess);
 	vec3 specular = specularStrength * spec * lightColor; 
 
 	outColor = vec4(ambient + diffuse + specular, 1.0) * textureColor;
