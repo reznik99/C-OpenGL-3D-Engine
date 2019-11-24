@@ -13,14 +13,13 @@
 
 
 Implemented:
-* OBJ loader (cached)
-* Texture loader
-* Lighting (No specular)
-* Terrain (Generate from heightmap)
-* Terrain Collision
+* OBJ & Texture loader
+* Phong Lighting
+* Terrain Generation(heightmap) and Collision
 * Terrain blendmapping
 * Skybox
-* Crude FPS pov
+* Crude FPS Camera
+* Crude Networking (multiplayer)
 
 To-Be Implemented:
 * Normal mapping (Entity and Terrain)
@@ -28,7 +27,6 @@ To-Be Implemented:
 * Reflections
 * Shadows
 * Particle renderer
-* Networking (multiplayer)
 * LOD
 * Object Collision
 
