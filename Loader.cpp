@@ -34,11 +34,11 @@ unsigned int loadTexture(const char* textureFile) {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1);
 	}
 	else {
-		std::cout << "Failed to load texture" << std::endl;
+		std::cout << "Failed to load texture " << textureFile << std::endl;
 	}
 	stbi_image_free(data);
 
-	std::cout << "Loaded texture" << std::endl;
+	std::cout << "Loaded texture " << textureFile << std::endl;
 
 	return textureId;
 }
@@ -68,7 +68,7 @@ unsigned int loadCubeMapTexture(std::vector<std::string> textureFiles) {
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	std::cout << "Loaded cubemap" << std::endl;
+	std::cout << "Loaded cubemap texture" << std::endl;
 
 	return textureId;
 }
@@ -197,7 +197,7 @@ Entity* readOBJ_better(const char* filename, const char* textureFile, const char
 
 	//if loaded obj before, don't load again!
 	if (cache.count(filename)) {
-		std::cout << "Cache Hit!...:  " << filename << std::endl;
+		//std::cout << "Cache Hit!...:  " << filename << std::endl;
 		std::vector<unsigned int> ids(cache.at(filename));
 		Entity* cachedEntity = new Entity();
 		cachedEntity->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &modelMatrix);
@@ -269,7 +269,7 @@ Entity* readOBJ_better(const char* filename, const char* textureFile, const char
 	//save Id's to Entity
 	Entity* newEntity = new Entity(verticesOut, indices, normalsOut, textureCoordsOut, &modelMatrix, textureId, textureNormalId);
 
-	std::cout << "Loaded Entity successfully" << std::endl;
+	std::cout << "Loaded Entity " << filename << std::endl;
 
 	cacheEntity(newEntity, filename);
 

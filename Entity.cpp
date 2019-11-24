@@ -33,11 +33,11 @@ Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, s
 	this->modelMatrix = *_modelMatrix;
 
 	//debuggin purposes
-	std::cout << "VAO: " << VAO << std::endl;
+	/*std::cout << "VAO: " << VAO << std::endl;
 	std::cout << "Indices: " << _indices.size() << std::endl;
 	std::cout << "Vertices: " << _data.size() << std::endl;
 	std::cout << "Normals: " << _normals.size() << std::endl;
-	std::cout << "textureCoords: " << _texCoords.size() << std::endl;
+	std::cout << "textureCoords: " << _texCoords.size() << std::endl;*/
 }
 
 void Entity::loadCached(unsigned int _VAO, unsigned int _vertVBOId, unsigned int _normVBOId,

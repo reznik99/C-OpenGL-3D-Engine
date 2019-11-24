@@ -102,6 +102,7 @@ int main() {
 	TCPClient* client;
 	if(online)
 		client = new TCPClient("25.20.52.183", "8080");
+
 	//set up window
 	SDL_Window* _window = SDL_CreateWindow("OpenGL Engine", 
 		600, 50, width, height, SDL_WINDOW_OPENGL);
@@ -112,7 +113,10 @@ int main() {
 	glewInit();
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-	init();
+
+	init(); //load game data
+
+	std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
 
 	//framerate control
 	Uint32 frameStart;
