@@ -1,4 +1,5 @@
 #pragma once
+
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -12,6 +13,7 @@
 #include "Entity.h"
 #include "Terrain.h"
 
+using namespace std;
 
 unsigned int loadTexture(const char* textureFile);
 

@@ -3,7 +3,7 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tinyobjloader/tiny_obj_loader.h>
 
-std::map<std::string, std::vector<unsigned int>> cache;
+map<string, vector<unsigned int>> cache;
 
 struct Vertex {
 	glm::vec3 pos;
@@ -34,22 +34,20 @@ unsigned int loadTexture(const char* textureFile) {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1);
 	}
 	else {
-		std::cout << "Failed to load texture " << textureFile << std::endl;
+		cout << "Failed to load texture " << textureFile << endl;
 	}
 	stbi_image_free(data);
-
-	std::cout << "Loaded texture " << textureFile << std::endl;
 
 	return textureId;
 }
 
-unsigned int loadCubeMapTexture(std::vector<std::string> textureFiles) {
+unsigned int loadCubeMapTexture(vector<string> textureFiles) {
 	unsigned int textureId;
 	glGenTextures(1, &textureId);
 	glActiveTexture(textureId);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
 
-	for (int i = 0; i < textureFiles.size(); i++) {
+	for (unsigned int i = 0; i < textureFiles.size(); i++) {
 		const char* textureFile = textureFiles.at(i).c_str();
 		// load and generate the texture
 		int width, height, nrChannels;
@@ -59,7 +57,7 @@ unsigned int loadCubeMapTexture(std::vector<std::string> textureFiles) {
 				GL_RGBA, GL_UNSIGNED_BYTE, data);
 		}
 		else
-			std::cout << "Failed to load texture" << std::endl;
+			cout << "Failed to load texture" << endl;
 		stbi_image_free(data);
 	}
 
@@ -68,38 +66,36 @@ unsigned int loadCubeMapTexture(std::vector<std::string> textureFiles) {
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	std::cout << "Loaded cubemap texture" << std::endl;
-
 	return textureId;
 }
 
 Entity* readOBJ(const char* filename, const char* textureFile, const char* textureNormalFile, glm::mat4 modelMatrix) {
 	//if loaded obj before, don't load again!
 	if (cache.count(filename)) {
-		std::cout << "Cache Hit!...:  " << filename << std::endl;
-		std::vector<unsigned int> ids(cache.at(filename));
+		cout << "Cache Hit!...:  " << filename << endl;
+		vector<unsigned int> ids(cache.at(filename));
 		Entity* cachedEntity = new Entity();
 		cachedEntity->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &modelMatrix);
 
 		return cachedEntity;
 	}
 
-	std::cout << "Reading...:  " << filename << std::endl;
+	cout << "Reading...:  " << filename << endl;
 
 	//indices (0 indexed)
-	std::vector < unsigned int > indices, normalIndices, textureIndices;
+	vector < unsigned int > indices, normalIndices, textureIndices;
 	//vertex data
-	std::vector < float > vertices;
-	std::vector < float > normals;
-	std::vector < float > textureCoords;
+	vector < float > vertices;
+	vector < float > normals;
+	vector < float > textureCoords;
 
 	unsigned int vertexCount = 0;
 
-	std::ifstream file(filename);
-	std::string str;
+	ifstream file(filename);
+	string str;
 	if (!file) throw _STDEXCEPT_;
 
-	while (std::getline(file, str)) {
+	while (getline(file, str)) {
 		const char* lineHeader = str.c_str();
 
 		if (str.rfind("vt ", 0) == 0) {
@@ -127,7 +123,7 @@ Entity* readOBJ(const char* filename, const char* textureFile, const char* textu
 			int count = sscanf_s(lineHeader, "f %d/%d/%d %d/%d/%d %d/%d/%d\n", &v1, &t1, &n1, &
 				v2, &t2, &n2, &v3, &t3, &n3);
 			if (count != 9)
-				std::cout << "Invalid OBJ format" << std::endl;
+				cout << "Invalid OBJ format" << endl;
 
 			indices.push_back(v1 - 1);
 			indices.push_back(v2 - 1);
@@ -143,13 +139,13 @@ Entity* readOBJ(const char* filename, const char* textureFile, const char* textu
 		}
 	}
 
-	std::cout << "Parsed obj successfully." << std::endl;
+	cout << "Parsed obj successfully." << endl;
 
 	//Code to sort attributes according to indices (not fully working, to be used with glDrawArrays())
 	/*
 	int indicesSize = indices.size();
-	std::vector < float > normalsOut;
-	std::vector < float > textureCoordsOut;
+	vector < float > normalsOut;
+	vector < float > textureCoordsOut;
 	normalsOut.resize(indices.size());
 	textureCoordsOut.resize(indices.size());
 
@@ -176,7 +172,7 @@ Entity* readOBJ(const char* filename, const char* textureFile, const char* textu
 		textureCoordsOut.insert(textureCoordsOut.begin() + vertPointer * 2 + 1, textureCoords[texPointer * 2 + 1]);
 	}*/
 
-	std::cout << "UVs and Normals sorted successfully" << std::endl;
+	cout << "UVs and Normals sorted successfully" << endl;
 
 	//load texture into opengl
 	unsigned int textureId = loadTexture(textureFile);
@@ -186,7 +182,7 @@ Entity* readOBJ(const char* filename, const char* textureFile, const char* textu
 	//save Id's to Entity
 	Entity *newEntity = new Entity(vertices, indices, normals, textureCoords, &modelMatrix, textureId, textureNormalId);
 
-	std::cout << "Loaded Entity successfully" << std::endl;
+	cout << "Loaded Entity successfully" << endl;
 
 	cacheEntity(newEntity, filename);
 
@@ -197,8 +193,8 @@ Entity* readOBJ_better(const char* filename, const char* textureFile, const char
 
 	//if loaded obj before, don't load again!
 	if (cache.count(filename)) {
-		//std::cout << "Cache Hit!...:  " << filename << std::endl;
-		std::vector<unsigned int> ids(cache.at(filename));
+		//cout << "Cache Hit!...:  " << filename << endl;
+		vector<unsigned int> ids(cache.at(filename));
 		Entity* cachedEntity = new Entity();
 		cachedEntity->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &modelMatrix);
 
@@ -206,16 +202,16 @@ Entity* readOBJ_better(const char* filename, const char* textureFile, const char
 	}
 
 	tinyobj::attrib_t attrib;
-	std::vector<tinyobj::shape_t> shapes;
-	std::vector<tinyobj::material_t> materials;
-	std::string warn, err;
+	vector<tinyobj::shape_t> shapes;
+	vector<tinyobj::material_t> materials;
+	string warn, err;
 
 	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename)) {
-		throw std::runtime_error(warn + err);
+		throw runtime_error(warn + err);
 	}
 
-	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
+	vector<Vertex> vertices;
+	vector<unsigned int> indices;
 
 	for (const auto& shape : shapes) {
 		for (const auto& index : shape.mesh.indices) {
@@ -240,9 +236,9 @@ Entity* readOBJ_better(const char* filename, const char* textureFile, const char
 			indices.push_back(indices.size());
 		}
 	}
-	std::vector < float > verticesOut;
-	std::vector < float > normalsOut;
-	std::vector < float > textureCoordsOut;
+	vector < float > verticesOut;
+	vector < float > normalsOut;
+	vector < float > textureCoordsOut;
 
 	for (Vertex v : vertices) {
 		verticesOut.push_back(v.pos.x);
@@ -269,50 +265,47 @@ Entity* readOBJ_better(const char* filename, const char* textureFile, const char
 	//save Id's to Entity
 	Entity* newEntity = new Entity(verticesOut, indices, normalsOut, textureCoordsOut, &modelMatrix, textureId, textureNormalId);
 
-	std::cout << "Loaded Entity " << filename << std::endl;
-
 	cacheEntity(newEntity, filename);
 
 	return newEntity;
 }
 
 void cacheEntity(Entity* newEntity, const char* filename) {
-	std::vector<unsigned int> idList{
+	vector<unsigned int> idList{
 		newEntity->VAO, newEntity->VBOs.at(0),
 		newEntity->VBOs.at(1), newEntity->VBOs.at(2),
 		newEntity->indexBufferSize,
 		newEntity->textureId, newEntity->normalTextureId,
 	};
-	cache.insert(std::pair<std::string, std::vector<unsigned int>>(filename, idList));
+	cache.insert(pair<string, vector<unsigned int>>(filename, idList));
 }
 
-std::string readShader(const char* filename) {
-	std::ifstream ifs(filename);
-	return std::string((std::istreambuf_iterator<char>(ifs)),
-		(std::istreambuf_iterator<char>()));
+string readShader(const char* filename) {
+	ifstream ifs(filename);
+	return string((istreambuf_iterator<char>(ifs)),
+		(istreambuf_iterator<char>()));
 }
 
 /* TERRAIN */
 
-void genTerrain(const char* heightMapFile, std::vector<std::string> textures , glm::mat4 modelMatrix, Terrain* newTerrain) {
-	std::cout << "Generating terrain with heightmap :  " << heightMapFile << std::endl;
+void genTerrain(const char* heightMapFile, vector<string> textures , glm::mat4 modelMatrix, Terrain* newTerrain) {
 
 	//read heightMapFile
 	int width, height, nrChannels;
-	unsigned char* data = stbi_load(heightMapFile, &width, &height, &nrChannels, STBI_rgb_alpha);
+	unsigned char* data = stbi_load(heightMapFile, &width, &height, &nrChannels, STBI_grey);
 	if (!data)
-		std::cout << "Failed to load Heightmap!" << std::endl;
+		cout << "Failed to load Heightmap!" << endl;
 
 	int VERTEX_COUNT = height/5; //assuming square image
 	float MAX_PIXEL_COLOUR = 256 * 256 * 256;
 
 	//generate vertices, normals uvs
-	std::vector<float> vertices(VERTEX_COUNT * VERTEX_COUNT * 3);
-	std::vector<float> normals(VERTEX_COUNT * VERTEX_COUNT * 3);
-	std::vector<float> uvs(VERTEX_COUNT * VERTEX_COUNT * 2);
+	vector<float> vertices(VERTEX_COUNT * VERTEX_COUNT * 3);
+	vector<float> normals(VERTEX_COUNT * VERTEX_COUNT * 3);
+	vector<float> uvs(VERTEX_COUNT * VERTEX_COUNT * 2);
 
-	std::vector<std::vector<float>> heights;
-	heights.resize(VERTEX_COUNT, std::vector<float>(VERTEX_COUNT, 0));
+	vector<vector<float>> heights;
+	heights.resize(VERTEX_COUNT, vector<float>(VERTEX_COUNT, 0));
 
 	int vertexPointer = 0;
 	for (int i = 0; i < VERTEX_COUNT; i++) {
@@ -336,7 +329,7 @@ void genTerrain(const char* heightMapFile, std::vector<std::string> textures , g
 		}
 	}
 	//generate indices
-	std::vector<unsigned int> indices(VERTEX_COUNT * VERTEX_COUNT * 6);
+	vector<unsigned int> indices(VERTEX_COUNT * VERTEX_COUNT * 6);
 	int pointer = 0;
 	for (int gz = 0; gz < VERTEX_COUNT - 1; gz++) {
 		for (int gx = 0; gx < VERTEX_COUNT - 1; gx++) {
@@ -354,8 +347,8 @@ void genTerrain(const char* heightMapFile, std::vector<std::string> textures , g
 	}
 
 	//Read textures (normal, textures, blendmap)
-	std::vector<int> textureIds(5);
-	for (int i = 0; i < textures.size(); i++)
+	vector<int> textureIds(5);
+	for (unsigned int i = 0; i < textures.size(); i++)
 		textureIds[i] = loadTexture(textures.at(i).c_str());
 
 	//load Terrain with data
