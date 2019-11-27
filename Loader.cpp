@@ -358,10 +358,10 @@ void genTerrain(const char* heightMapFile, vector<string> textures , glm::mat4 m
 }
 
 glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT) {
-	float heightL = getHeight(i - 1, j, heightMap, height, nrChannels, MAX_HEIGHT);
-	float heightR = getHeight(i + 1, j, heightMap, height, nrChannels, MAX_HEIGHT);
-	float heightD = getHeight(i, j - 1, heightMap, height, nrChannels, MAX_HEIGHT);
-	float heightU = getHeight(i, j + 1, heightMap, height, nrChannels, MAX_HEIGHT);
+	float heightD = getHeight(i - 1, j, heightMap, height, nrChannels, MAX_HEIGHT);
+	float heightU = getHeight(i + 1, j, heightMap, height, nrChannels, MAX_HEIGHT);
+	float heightL = getHeight(i, j - 1, heightMap, height, nrChannels, MAX_HEIGHT);
+	float heightR = getHeight(i, j + 1, heightMap, height, nrChannels, MAX_HEIGHT);
 	glm::vec3 normal = glm::vec3(heightL - heightR, 2.0f, heightD - heightU);
 	return glm::normalize(normal);
 }
