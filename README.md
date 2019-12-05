@@ -7,7 +7,7 @@
 > I chose openGL because of previous experience with it.
 
 <p float="left" align="center">
-  <img src="readmeSrc/6.PNG" width="45%" />
+  <img src="readmeSrc/8.PNG" width="45%" />
   <img src="readmeSrc/7.PNG" width="45%" />
 </p>
 
@@ -19,13 +19,14 @@ Implemented:
 * Terrain blendmapping
 * Skybox
 * Crude FPS Camera
-* Crude Networking (multiplayer)
+* Multiplayer
 
 To-Be Implemented:
 * Normal mapping (Entity and Terrain)
 * Water (reflection/refraction)
 * Reflections
-* Shadows
+* Multiple light sources
+* Shadows (Shadow Mapping -> Percentage Closer Filtering -> Cascading Shadow Maps)
 * Particle renderer
 * LOD
 * Object Collision
