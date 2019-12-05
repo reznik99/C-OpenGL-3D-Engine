@@ -296,7 +296,7 @@ void genTerrain(const char* heightMapFile, vector<string> textures , glm::mat4 m
 	if (!data)
 		cout << "Failed to load Heightmap!" << endl;
 
-	int VERTEX_COUNT = height/5; //assuming square image
+	int VERTEX_COUNT = height; //assuming square image
 	float MAX_PIXEL_COLOUR = 256 * 256 * 256;
 
 	//generate vertices, normals uvs
@@ -369,7 +369,7 @@ glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, in
 float getHeight(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT) {
 	if (i < 0 || i >= height || j < 0 || j >= height) return NULL;
 
-	unsigned char* pixelOffset = heightMap + (i * height + j) * nrChannels;
+	unsigned char* pixelOffset = heightMap + (i * height + j);// *nrChannels;
 	unsigned char r = pixelOffset[0];
 	unsigned char g = pixelOffset[1];
 	unsigned char b = pixelOffset[2];
