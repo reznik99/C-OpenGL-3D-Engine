@@ -5,6 +5,8 @@
 #include "Camera.h"
 #include "Loader.h"
 
+using namespace std;
+
 class Renderer
 {
 public:
@@ -22,12 +24,11 @@ public:
 
 	Terrain* getTerrain();
 
-	unsigned int createShader(unsigned int type, const std::string& source);
-	unsigned int createShaderProgram(const std::string& vertexShaderSource,
-		const std::string& fragmentShaderSource, unsigned int index);
+	unsigned int createShader(unsigned int type, const string& source);
+	unsigned int createShaderProgram(const string& vertexShaderSource,
+		const string& fragmentShaderSource, unsigned int index);
 
-	Entity player;
-	glm::vec4 playerPos;
+	map<string, Entity*> players;
 
 private:
 	const float FOV = 75.0f;
@@ -38,7 +39,7 @@ private:
 
 	unsigned int shaderIds[6]; //vertexEntities - fragEntities | vertexTerrain - fragTerrain ... etc
 
-	std::vector<Entity> entities;
+	vector<Entity> entities;
 	Terrain terrain;
 	glm::mat4 projectionMatrix;
 
@@ -47,7 +48,7 @@ private:
 	unsigned int skyboxVBO;
 
 	float SIZE = 512.0f;
-	std::vector<float> VERTICES{
+	vector<float> VERTICES{
 		-SIZE,  SIZE, -SIZE,
 		-SIZE, -SIZE, -SIZE,
 		SIZE, -SIZE, -SIZE,

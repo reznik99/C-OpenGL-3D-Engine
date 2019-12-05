@@ -49,8 +49,8 @@ unsigned int Terrain::storeDataInAttributeList(int attributeNumber, int coordina
 float Terrain::getHeightAt(int x, int z) {
 
 	float gridSquareSize = mapSize / (heights.size() - 1);
-	int gridX = (int)floor(x / gridSquareSize);
-	int gridZ = (int)floor(z / gridSquareSize);
+	unsigned int gridX = (int)floor(x / gridSquareSize);
+	unsigned int gridZ = (int)floor(z / gridSquareSize);
 	if (gridX < 0 || gridZ < 0 || gridX >= heights.size() - 1 || gridZ >= heights.size() - 1) 
 		return NULL;
 

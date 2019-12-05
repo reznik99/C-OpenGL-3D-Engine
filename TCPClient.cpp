@@ -1,8 +1,9 @@
 #include "TCPClient.h"
-#include <stdlib.h>
-#include <iostream>
+
 
 TCPClient::TCPClient(const char* ip, const char* PORT) {
+
+	connectedStatus = true;
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -19,6 +20,7 @@ TCPClient::TCPClient(const char* ip, const char* PORT) {
 	if (iResult != 0) {
 		printf("getaddrinfo failed with error: %d\n", iResult);
 		WSACleanup();
+		connectedStatus = true;
 	}
 
 	// Attempt to connect to an address until one succeeds
@@ -47,12 +49,12 @@ TCPClient::TCPClient(const char* ip, const char* PORT) {
 	if (ConnectSocket == INVALID_SOCKET) {
 		printf("Unable to connect to server!\n");
 		WSACleanup();
+		connectedStatus = false;
 	}
 
-	//connected, can now send data
 }
 
-glm::vec4 TCPClient::update(glm::vec3 position, float yaw) {
+void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer, vector<unsigned int> ids) {
 	// Send an initial buffer
 	sendbuf = std::to_string(position.x) + " "
 		+ std::to_string(position.y) + " "
@@ -66,25 +68,34 @@ glm::vec4 TCPClient::update(glm::vec3 position, float yaw) {
 		WSACleanup();
 	}
 
-	printf("Bytes Sent: %ld , sent:%s\n", iResult, sendbuf.c_str());
+	//printf("Bytes Sent: %ld , sent:%s\n", iResult, sendbuf.c_str());
 
-	// This will block thread if nothing is recieved! to be fixed
 	iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-	/*do {
 
-		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-		if (iResult > 0)
-			printf("Bytes received: %d\n", iResult);
-		else if (iResult == 0)
-			printf("Connection closed\n");
-		else
-			printf("recv failed with error: %d\n", WSAGetLastError());
+	//printf("Recieved: %s \n", recvbuf);
+	string playerId = "invalid";
+	glm::vec4 output = readBufToVectors(recvbuf, playerId);
+	
+	if (renderer->players.count(playerId)) {
+		//Entity* player = renderer->players.at(playerId);
+		//update player
+		//player->modelMatrix[3] = output;
+		//cout << "Player update" << playerId << endl;
+	}
+	else {
+		cout << "New Player joined server" << playerId << endl;
+		//create new player entity from cache in loader
+		Entity newPlayer;
+		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y, output.z));
+		tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(output.a), glm::vec3(0, 1, 0));
 
-	} while (iResult > 0);*/
-
-	printf("Recieved: %s \n", recvbuf);
-	glm::vec4 output = readBufToVectors(recvbuf);
-	return output;
+		newPlayer.loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &tempModelMatrix);
+		cout << "size before: " << renderer->players.size() << endl;
+		renderer->players.insert(pair<string, Entity*>(playerId, &newPlayer));
+		cout << "size after: " << renderer->players.size() << endl;
+		cout << "player pos: " << glm::to_string(newPlayer.modelMatrix[3]) << endl;
+	}
+		
 }
 
 void TCPClient::cleanUp() {
@@ -98,10 +109,12 @@ void TCPClient::cleanUp() {
 	WSACleanup();
 }
 
-glm::vec4 TCPClient::readBufToVectors(const char * buffer) {
-	//for now read only first 4 values (one vector) Data is CSV
+glm::vec4 TCPClient::readBufToVectors(const char * buffer, string& playerId) {
+	//first 5 values, (id, x, y, z, yaw) for player
 	char* pEnd;
-	float x = strtof(buffer, &pEnd);
+	string input = string(buffer);
+	playerId = input.substr(0, input.find(" "));
+	float x = strtof(buffer+playerId.length(), &pEnd);
 	float y = strtof(pEnd, &pEnd);
 	float z = strtof(pEnd, &pEnd);
 	float yaw = strtof(pEnd, &pEnd);

@@ -1,8 +1,8 @@
 #include "Camera.h"
-#include "Renderer.h"
 
 Camera::Camera(glm::vec3 pos, glm::vec3 angles) {
 	this->position = glm::vec3(pos);
+	this->velocity = glm::vec3(0);
 	this->angles = glm::vec3(angles);
 	//should use array
 	moveForward = false;
@@ -14,7 +14,7 @@ Camera::Camera(glm::vec3 pos, glm::vec3 angles) {
 	this->prevMouseY = -1;
 }
 
-void Camera::update(Renderer* renderer) {
+void Camera::update(Terrain* terrain) {
 	glm::vec3 front = getFront();
 	glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
 
@@ -38,8 +38,7 @@ void Camera::update(Renderer* renderer) {
 	this->position += this->velocity;	//move
 	this->velocity[1] -= this->GRAVITY; //fall
 
-	float groundPos = this->playerHeight + renderer->getTerrain()->
-		getHeightAt(this->position[2], this->position[0]);
+	float groundPos = this->playerHeight + terrain->getHeightAt((int)this->position[2], (int)this->position[0]);
 	//collide
 	if (this->position[1] < groundPos) {
 		this->position[1] = groundPos;
@@ -89,14 +88,14 @@ bool Camera::checkInputs(SDL_Event _event) {
 	//mouse movement
 	if (_event.type == SDL_MOUSEMOTION) {
 		if (prevMouseX == -1) { //if mouse just moved into window
-			prevMouseX = _event.motion.x;
-			prevMouseY = _event.motion.y;
+			prevMouseX = (float)_event.motion.x;
+			prevMouseY = (float)_event.motion.y;
 			return false;
 		}
 		float xoffset = _event.motion.x - prevMouseX;
 		float yoffset = prevMouseY - _event.motion.y;
-		prevMouseX = _event.motion.x;
-		prevMouseY = _event.motion.y;
+		prevMouseX = (float)_event.motion.x;
+		prevMouseY = (float)_event.motion.y;
 
 		float sensitivity = 0.25;
 

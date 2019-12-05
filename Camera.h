@@ -4,7 +4,7 @@
 #include <glm\ext\matrix_float4x4.hpp>
 #include <glm\ext\matrix_transform.hpp>
 #include <iostream>
-
+#include "Terrain.h"
 class Renderer;
 
 class Camera
@@ -12,7 +12,7 @@ class Camera
 public:
 	Camera(glm::vec3 pos, glm::vec3 angles);
 
-	void update(Renderer* renderer);
+	void update(Terrain* terrain);
 
 	bool checkInputs(SDL_Event _event);
 

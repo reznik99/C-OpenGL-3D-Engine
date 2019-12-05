@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 
+
 Renderer::Renderer(unsigned int width, unsigned int height) {
 	//depth buffer
 	glEnable(GL_DEPTH_TEST);
@@ -11,10 +12,11 @@ Renderer::Renderer(unsigned int width, unsigned int height) {
 	glEnable(GL_MULTISAMPLE);
 	/*glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);*/
-
+	
+	cout << "Loading shaders " << endl;
 	//Entity shaders and program
-	std::string _vertexShaderSource = readShader("shaders/vertexShaderEntities.glsl");
-	std::string _fragmentShaderSource = readShader("shaders/fragmentShaderEntities.glsl");
+	string _vertexShaderSource = readShader("shaders/vertexShaderEntities.glsl");
+	string _fragmentShaderSource = readShader("shaders/fragmentShaderEntities.glsl");
 	g_EntityProgramId = createShaderProgram(_vertexShaderSource, _fragmentShaderSource, 0);
 	//Terrain shaders and program
 	_vertexShaderSource = readShader("shaders/vertexShaderTerrain.glsl");
@@ -31,7 +33,7 @@ Renderer::Renderer(unsigned int width, unsigned int height) {
 	this->skyboxVBO = Entity::storeDataInAttributeList(0, this->VERTICES.size(), this->VERTICES);
 
 	//read textures
-	std::vector<std::string> files = { "gameFiles/Skybox/right.png", "gameFiles/Skybox/left.png", 
+	vector<string> files = { "gameFiles/Skybox/right.png", "gameFiles/Skybox/left.png", 
 		"gameFiles/Skybox/top.png", "gameFiles/Skybox/bottom.png", "gameFiles/Skybox/back.png", "gameFiles/Skybox/front.png" };
 	this->cubeMapTextureId = loadCubeMapTexture(files);
 }
@@ -47,8 +49,6 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 
 		for (unsigned int i = 0; i < entities.size(); i++) {
 			Entity* obj = &entities[i];
-			if (i == 3)
-				obj = &this->player;
 
 			//load uniform for model matrix
 			int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
@@ -64,6 +64,25 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, obj->normalTextureId);
 			}
+			//bind vao
+			glBindVertexArray(obj->VAO);
+			//render
+			glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+		}
+		//cout << players.size() << endl;
+		for (const auto& p : players) {
+			Entity* obj = p.second;
+
+			//load uniform for model matrix
+			int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
+			glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj->modelMatrix[0][0]);
+
+			//bind diffuse tex
+			glUniform1i(glGetUniformLocation(g_EntityProgramId, "diffuseTex"), 0);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, obj->textureId);
+			
 			//bind vao
 			glBindVertexArray(obj->VAO);
 			//render
@@ -86,7 +105,7 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex3"), 3);
 		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex4"), 4);
 		//bind texture
-		for (int i = 0; i < terrain.textureIds.size(); i++) {
+		for (unsigned int i = 0; i < terrain.textureIds.size(); i++) {
 			glActiveTexture(GL_TEXTURE0 + i);
 			glBindTexture(GL_TEXTURE_2D, terrain.textureIds.at(i));
 		}
@@ -125,13 +144,10 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 }
 
 void Renderer::update() {
+	//update entities
 	for (Entity e : this->entities)
 		e.update();
-
-	//update player position (subtract player height from y pos
-	glm::mat4 newModelMatrix(glm::translate(glm::mat4(1), glm::vec3(this->playerPos.x, this->playerPos.y - 2.5, this->playerPos.z)));
-	newModelMatrix = glm::rotate(newModelMatrix, glm::radians(this->playerPos.a), glm::vec3(0, 1, 0));
-	this->player.modelMatrix = newModelMatrix;
+	
 }
 
 void Renderer::processEntity(Entity e) {
@@ -181,7 +197,7 @@ Terrain* Renderer::getTerrain() {
 	return &this->terrain;
 }
 
-unsigned int Renderer::createShader(unsigned int type, const std::string& source) {
+unsigned int Renderer::createShader(unsigned int type, const string& source) {
 	unsigned int _id = glCreateShader(type);
 
 	auto _source = source.c_str();
@@ -197,10 +213,10 @@ unsigned int Renderer::createShader(unsigned int type, const std::string& source
 		int _length = 0;
 		glGetShaderiv(_id, GL_INFO_LOG_LENGTH, &_length);
 
-		std::vector<char> _info(_length);
+		vector<char> _info(_length);
 		glGetShaderInfoLog(_id, _length, &_length, _info.data());
 
-		std::cout << std::string(_info.begin(), _info.end()) << std::endl;
+		cout << string(_info.begin(), _info.end()) << endl;
 
 		glDeleteShader(_id);
 		return 0;
@@ -209,8 +225,8 @@ unsigned int Renderer::createShader(unsigned int type, const std::string& source
 	return _id;
 }
 
-unsigned int Renderer::createShaderProgram(const std::string& vertexShaderSource,
-	const std::string& fragmentShaderSource, unsigned int index) {
+unsigned int Renderer::createShaderProgram(const string& vertexShaderSource,
+	const string& fragmentShaderSource, unsigned int index) {
 
 	unsigned int vertexShaderId = createShader(GL_VERTEX_SHADER, vertexShaderSource);
 	unsigned int fragmentShaderId = createShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
@@ -234,10 +250,10 @@ unsigned int Renderer::createShaderProgram(const std::string& vertexShaderSource
 			int _length = 0;
 			glGetProgramiv(_programId, GL_INFO_LOG_LENGTH, &_length);
 
-			std::vector<char> _info(_length);
+			vector<char> _info(_length);
 			glGetProgramInfoLog(_programId, _length, &_length, _info.data());
 
-			std::cout << std::string(_info.begin(), _info.end()) << std::endl;
+			cout << string(_info.begin(), _info.end()) << endl;
 
 			glDeleteShader(vertexShaderId);
 			glDeleteShader(fragmentShaderId);
