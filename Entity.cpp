@@ -2,7 +2,7 @@
 #include "Entity.h"
 
 Entity::Entity() {
-	this->modelMatrix = this->modelMatrix = glm::mat4(1.0f); //default model matrix
+	this->modelMatrix = glm::mat4(1.0f); //default model matrix
 }
 
 Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, std::vector<float>& _normals,
@@ -32,7 +32,6 @@ Entity::Entity(std::vector<float>& _data, std::vector<unsigned int>& _indices, s
 	
 	this->modelMatrix = *_modelMatrix;
 
-	//debuggin purposes
 	/*std::cout << "VAO: " << VAO << std::endl;
 	std::cout << "Indices: " << _indices.size() << std::endl;
 	std::cout << "Vertices: " << _data.size() << std::endl;
@@ -56,7 +55,7 @@ void Entity::loadCached(unsigned int _VAO, unsigned int _vertVBOId, unsigned int
 }
 
 int Entity::update() {
-	modelMatrix = glm::rotate(modelMatrix, 3.14f / 200, glm::vec3(0, 1.0, 0));
+	this->modelMatrix = glm::rotate(modelMatrix, 3.14f / 200, glm::vec3(0, 1.0, 0));
 
 	return 0;
 }

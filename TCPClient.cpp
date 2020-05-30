@@ -68,34 +68,44 @@ void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer, vector
 		WSACleanup();
 	}
 
-	//printf("Bytes Sent: %ld , sent:%s\n", iResult, sendbuf.c_str());
-
 	iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
 
-	//printf("Recieved: %s \n", recvbuf);
-	string playerId = "invalid";
+	string playerId = "temporary_name";
 	glm::vec4 output = readBufToVectors(recvbuf, playerId);
-	
-	if (renderer->players.count(playerId)) {
-		//Entity* player = renderer->players.at(playerId);
-		//update player
-		//player->modelMatrix[3] = output;
-		//cout << "Player update" << playerId << endl;
-	}
-	else {
-		cout << "New Player joined server" << playerId << endl;
-		//create new player entity from cache in loader
-		Entity newPlayer;
-		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y, output.z));
-		tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(output.a), glm::vec3(0, 1, 0));
 
-		newPlayer.loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &tempModelMatrix);
-		cout << "size before: " << renderer->players.size() << endl;
-		renderer->players.insert(pair<string, Entity*>(playerId, &newPlayer));
-		cout << "size after: " << renderer->players.size() << endl;
-		cout << "player pos: " << glm::to_string(newPlayer.modelMatrix[3]) << endl;
+	//empty buffer
+	memset(recvbuf, 0, this->recvbuflen * (sizeof recvbuf[0]));
+	
+	if (renderer->players.count(playerId)) { // update player
+		Entity* player = renderer->players.at(playerId);
+		player->modelMatrix[3] = output;
+		//cout << glm::to_string(player->modelMatrix[3]) << playerId << endl;
 	}
+	else { // create new player entity from cache in loader
+		cout << "New Player joined server: " << playerId << endl;
 		
+		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y, output.z));
+		tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(output.w), glm::vec3(0, 1, 0));
+
+		Entity* newPlayer = new Entity();
+		newPlayer->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &tempModelMatrix);
+		renderer->players.insert(pair<string, Entity*>(playerId, newPlayer));
+
+		cout << "player pos: " << glm::to_string(newPlayer->modelMatrix[3]) << endl;
+		cout << "_indexBufferSize: " << newPlayer->indexBufferSize << endl;
+	}
+}
+
+glm::vec4 TCPClient::readBufToVectors(const char* buffer, string& playerId) {
+	//first 5 values, (id, x, y, z, yaw) for player
+	char* pEnd;
+	string input = string(buffer);
+	playerId = input.substr(0, input.find(" "));
+	float x = strtof(buffer + playerId.length(), &pEnd);
+	float y = strtof(pEnd, &pEnd);
+	float z = strtof(pEnd, &pEnd);
+	float yaw = strtof(pEnd, &pEnd);
+	return glm::vec4(x, y, z, yaw);
 }
 
 void TCPClient::cleanUp() {
@@ -109,14 +119,3 @@ void TCPClient::cleanUp() {
 	WSACleanup();
 }
 
-glm::vec4 TCPClient::readBufToVectors(const char * buffer, string& playerId) {
-	//first 5 values, (id, x, y, z, yaw) for player
-	char* pEnd;
-	string input = string(buffer);
-	playerId = input.substr(0, input.find(" "));
-	float x = strtof(buffer+playerId.length(), &pEnd);
-	float y = strtof(pEnd, &pEnd);
-	float z = strtof(pEnd, &pEnd);
-	float yaw = strtof(pEnd, &pEnd);
-	return glm::vec4(x, y, z, yaw);
-}

@@ -70,9 +70,15 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 			glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
 			glBindVertexArray(0);
 		}
-		//cout << players.size() << endl;
-		for (const auto& p : players) {
-			Entity* obj = p.second;
+		
+		glUseProgram(g_EntityProgramId);
+		this->loadUniforms(g_EntityProgramId, light, camera);
+
+		// Iterate over the map using Iterator till end.
+		map<string, Entity*>::iterator it = players.begin();
+		while (it != players.end()) {
+			string name = it->first;
+			Entity* obj = it->second;
 
 			//load uniform for model matrix
 			int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
@@ -88,14 +94,15 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 			//render
 			glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
 			glBindVertexArray(0);
+			it++;
 		}
 	}
 
 	//RENDER TERRAINS
 	{
 		glUseProgram(g_TerrainProgramId);
-
 		this->loadUniforms(g_TerrainProgramId, light, camera);
+
 		//load uniform for model matrix
 		int modelMatrixId = glGetUniformLocation(g_TerrainProgramId, "modelMatrix");
 		glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &terrain.modelMatrix[0][0]);
