@@ -77,9 +77,9 @@ void init() {
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.7f));
 	loadEntity("gameFiles/House.obj", "gameFiles/House.png", nullptr, tempModelMatrix);
 
-	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrainSize / 3.0f + 10, renderer->getTerrain()->getHeightAt((int)(terrainSize / 3) + 10, (int)(terrainSize / 3) + 10), terrainSize / 3.0f + 10));
-	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.15f));
-	loadEntity("gameFiles/Well.obj", "gameFiles/Well.png", nullptr, tempModelMatrix);
+	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(50, renderer->getTerrain()->getHeightAt(50, 50)+2, 50));
+	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(1));
+	loadEntity("gameFiles/moonbrook_inn.obj", "gameFiles/moonbrook_inn.png", nullptr, tempModelMatrix);
 
 	tempModelMatrix = glm::translate(glm::mat4(1), camera.getPosition());
 	string playerId = "test";

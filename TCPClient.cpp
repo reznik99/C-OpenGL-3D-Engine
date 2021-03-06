@@ -59,7 +59,7 @@ void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer, vector
 	sendbuf = std::to_string(position.x) + " "
 		+ std::to_string(position.y) + " "
 		+ std::to_string(position.z) + " "
-		+ std::to_string(yaw) + ",";
+		+ std::to_string(yaw) + "|";
 
 	iResult = send(ConnectSocket, sendbuf.data(), sendbuf.size(), 0);
 	if (iResult == SOCKET_ERROR) {
@@ -70,11 +70,14 @@ void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer, vector
 
 	iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
 
+	//char** chunks;
+	//const char delimeter = '|';
+    //char* data = strtok_s(recvbuf, &delimeter, chunks);
+
 	string playerId = "temporary_name";
 	glm::vec4 output = readBufToVectors(recvbuf, playerId);
 
-	//empty buffer
-	memset(recvbuf, 0, this->recvbuflen * (sizeof recvbuf[0]));
+	
 	
 	if (renderer->players.count(playerId)) { // update player
 		Entity* player = renderer->players.at(playerId);
