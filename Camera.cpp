@@ -21,14 +21,16 @@ void Camera::update(Terrain* terrain) {
 	float speed = 0.01f;
 
 	if (!jumped) {
+		glm::vec3 total(0, 0, 0);
 		if (moveForward)
-			this->velocity = front * MAX_SPEED;
-		if (moveRight)
-			this->velocity = right * MAX_SPEED;
+			total = front * MAX_SPEED;
 		if (moveBackwards)
-			this->velocity = front * -MAX_SPEED;
+			total = front * -MAX_SPEED;
+		if (moveRight)
+			total += right * MAX_SPEED;
 		if (moveLeft)
-			this->velocity = right * -MAX_SPEED;
+			total += right * -MAX_SPEED;
+		this->velocity = total;
 	}
 	if (!moveForward && !moveRight && !moveBackwards && !moveLeft && !jumped) {
 		this->velocity[0] = 0;
