@@ -28,7 +28,7 @@ class TCPClient {
 public:
 	TCPClient(const char* ip, const char* PORT);
 
-	void update(glm::vec3 position, float yaw, Renderer* renderer, vector<unsigned int> ids);
+	void update(glm::vec3 position, float yaw, Renderer* renderer);
 
 	glm::vec4 readBufToVectors(const char* buffer, string& playerId);
 

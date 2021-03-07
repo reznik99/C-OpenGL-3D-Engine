@@ -80,12 +80,15 @@ void init() {
 	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(50, renderer->getTerrain()->getHeightAt(50, 50)+2, 50));
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(1));
 	loadEntity("gameFiles/moonbrook_inn.obj", "gameFiles/moonbrook_inn.png", nullptr, tempModelMatrix);
-
+	
 	tempModelMatrix = glm::translate(glm::mat4(1), camera.getPosition());
+	readOBJ_better("gameFiles/Player.obj", "gameFiles/Well.png", nullptr, tempModelMatrix); //cache player model
+
+	/*tempModelMatrix = glm::translate(glm::mat4(1), camera.getPosition());
 	string playerId = "test";
 	Entity* player = readOBJ_better("gameFiles/Player.obj", "gameFiles/Well.png", nullptr, tempModelMatrix);
 	pair<string, Entity*> p = pair<string, Entity*>(playerId, player);
-	renderer->players.insert(p);
+	renderer->players.insert(p);*/
 
 	//random entities
 	generateEntities("gameFiles/Palm.obj", "gameFiles/Palm.png", 150);
@@ -137,8 +140,8 @@ int main(int argc, char* argv[]) {
 	Uint32 frameStart;
 	int frameTime;
 	bool firstLoop = true;
-	vector<unsigned int> ids = cache.at("gameFiles/Player.obj");
-
+	//vector<unsigned int> ids = cache.at("gameFiles/Player.obj");
+	
 	//main loop
 	while (1) {
 		bool _break = false;
@@ -151,7 +154,7 @@ int main(int argc, char* argv[]) {
 		//update
 		if (online) { //players
 			if (firstLoop || tcpPromise.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
-				tcpPromise = std::async(std::launch::async, &TCPClient::update, client, camera.getPosition(), camera.getAngles().y, renderer, ids);
+				tcpPromise = std::async(std::launch::async, &TCPClient::update, client, camera.getPosition(), camera.getAngles().y, renderer);
 				firstLoop = false;
 			}
 		}

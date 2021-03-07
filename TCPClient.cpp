@@ -54,7 +54,7 @@ TCPClient::TCPClient(const char* ip, const char* PORT) {
 
 }
 
-void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer, vector<unsigned int> ids) {
+void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer) {
 	// Send an initial buffer
 	sendbuf = std::to_string(position.x) + " "
 		+ std::to_string(position.y) + " "
@@ -74,15 +74,14 @@ void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer, vector
 	//const char delimeter = '|';
     //char* data = strtok_s(recvbuf, &delimeter, chunks);
 
-	string playerId = "temporary_name";
+	string playerId;
 	glm::vec4 output = readBufToVectors(recvbuf, playerId);
 
-	
 	
 	if (renderer->players.count(playerId)) { // update player
 		Entity* player = renderer->players.at(playerId);
 		player->modelMatrix[3] = output;
-		//cout << glm::to_string(player->modelMatrix[3]) << playerId << endl;
+		cout << "Player: " << playerId << " " << glm::to_string(player->modelMatrix[3])  << endl;
 	}
 	else { // create new player entity from cache in loader
 		cout << "New Player joined server: " << playerId << endl;
@@ -90,11 +89,12 @@ void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer, vector
 		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y, output.z));
 		tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(output.w), glm::vec3(0, 1, 0));
 
-		Entity* newPlayer = new Entity();
-		newPlayer->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &tempModelMatrix);
+		//Entity* newPlayer = new Entity();
+		//newPlayer->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &tempModelMatrix);
+		Entity* newPlayer = readOBJ_better("gameFiles/Player.obj", "gameFiles/Well.png", nullptr, tempModelMatrix);
 		renderer->players.insert(pair<string, Entity*>(playerId, newPlayer));
 
-		cout << "player pos: " << glm::to_string(newPlayer->modelMatrix[3]) << endl;
+		cout << "player pos: " << glm::to_string(output) << endl;
 		cout << "_indexBufferSize: " << newPlayer->indexBufferSize << endl;
 	}
 }
