@@ -21,7 +21,7 @@
 extern map<string, vector<unsigned int>> cache;
 
 //globals
-const unsigned int width = 1300, height = 900;
+const unsigned int width = 1920, height = 1080;
 const int FPS = 60;
 const int frameDelay = 1000 / FPS;
 bool online = true;
@@ -61,14 +61,14 @@ void init() {
 	vector<string> terrainTextures{ "gameFiles/Terrain/Blendmap.png","gameFiles/Terrain/Rock.png","gameFiles/Terrain/Grass.png","gameFiles/Terrain/Path.png","gameFiles/Terrain/Sand.png" };
 	glm::mat4 terrainModelMatrix = glm::translate(glm::mat4(1), glm::vec3(0, 0, 0));
 
-	genTerrain("gameFiles/Terrain/heightmap2_scaled.png", terrainTextures, terrainModelMatrix, renderer->getTerrain());
+	genTerrain("gameFiles/Terrain/heightmap2_scaled.png", terrainTextures, terrainModelMatrix, renderer->getTerrain(), true);
 
 	//place player above ground
 	float terrainSize = renderer->getTerrain()->mapSize;
-	camera.setPosition(glm::vec3(terrainSize / 2.0f, renderer->getTerrain()->getHeightAt((int)(terrainSize / 2), (int)(terrainSize / 2)) + camera.playerHeight, terrainSize / 2.0f));
+	camera.setPosition(glm::vec3(terrainSize / 2, renderer->getTerrain()->getHeightAt((int)(terrainSize / 2), (int)(terrainSize / 2)) + camera.playerHeight, terrainSize / 2));
 
 	//set light
-	g_light = glm::vec3(25.0f, terrainSize, terrainSize * 2);
+	g_light = glm::vec3(25.0f, terrainSize / 2, terrainSize * 2); //sunset position (match skybox)
 
 	// load game Entities
 	std::cout << "Loading game Entities..." << std::endl;
@@ -77,7 +77,7 @@ void init() {
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.7f));
 	loadEntity("gameFiles/House.obj", "gameFiles/House.png", nullptr, tempModelMatrix);
 
-	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(50, renderer->getTerrain()->getHeightAt(50, 50)+2, 50));
+	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(50, renderer->getTerrain()->getHeightAt(50, 50)+1, 50));
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(1));
 	loadEntity("gameFiles/moonbrook_inn.obj", "gameFiles/moonbrook_inn.png", nullptr, tempModelMatrix);
 	
