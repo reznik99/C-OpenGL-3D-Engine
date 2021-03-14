@@ -29,15 +29,15 @@ UDPClient::UDPClient(string server, string PORT) {
 	inet_pton(AF_INET, server.c_str(), &dest.sin_addr.s_addr); // (might not work with hostnames?)
 
 
+	// Ping Check (RTT)
+	if (this->connectedStatus) {
+		this->calculateRTT();
+	}
+
 	sendbuf = "CONNECT&0.0&0.0&0.0&0.0&Frank";
 	iResult = sendto(ConnectSocket, sendbuf.data(), sendbuf.size(), 0, (SOCKADDR*)&dest, sizeof(dest));
 	if (iResult == SOCKET_ERROR) {
 		printf("send failed with error: %d\n", WSAGetLastError());
-	}
-
-	// Ping Check (RTT)
-	if (this->connectedStatus) {
-		this->calculateRTT();
 	}
 }
 
@@ -126,9 +126,10 @@ void UDPClient::calculateRTT() {
 
 	iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
 	string input = string(recvbuf);
+	cout << input ;
 	if (input == "RTT_CHECK") {
 		milliseconds now = duration_cast<milliseconds>(chrono::system_clock::now().time_since_epoch());
 		long long RTT = now.count() - ms.count();
-		cout << "RTT: " << RTT << "ms" << endl;
+		cout << " RTT: " << RTT << "ms" << endl;
 	}
 }
