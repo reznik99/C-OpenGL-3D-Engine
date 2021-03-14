@@ -17,7 +17,7 @@ using namespace std;
 
 unsigned int loadTexture(const char* textureFile);
 
-unsigned int loadCubeMapTexture(std::vector<std::string> textureFiles);
+unsigned int loadCubeMapTexture(vector<string> textureFiles);
 
 Entity* readOBJ(const char* filename, const char* textureFile, const char* textureNormalFile, glm::mat4 modelMatrix);
 
@@ -25,9 +25,9 @@ Entity* readOBJ_better(const char* filename, const char* textureFile, const char
 
 void cacheEntity(Entity* newEntity, const char* filename);
 
-std::string readShader(const char* filename);
+string readShader(const char* filename);
 
-void genTerrain(const char* heightMapFile, std::vector<std::string> textures, glm::mat4 modelMatrix, Terrain* newTerrain, bool flat);
+void genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 modelMatrix, Terrain* newTerrain, bool flat);
 
 glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT);
 
