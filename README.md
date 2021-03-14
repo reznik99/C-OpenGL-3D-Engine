@@ -12,7 +12,7 @@
 </p>
 
 
-Implemented:
+## Implemented:
 * OBJ & Texture loader
 * Phong Lighting
 * Terrain
@@ -26,7 +26,7 @@ Implemented:
   * Built on TCP
   * Client Authorative
 
-To-Be Implemented:
+## To-Be Implemented:
 * Normal mapping
   * Entity
   * Terrain
