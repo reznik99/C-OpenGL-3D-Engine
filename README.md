@@ -12,22 +12,38 @@
 </p>
 
 
-Implemented:
+## Implemented:
 * OBJ & Texture loader
 * Phong Lighting
-* Terrain Generation(heightmap) and Collision
-* Terrain blendmapping
+* Terrain
+  * Heightmap Generation
+  * Blendmapping
+  * Collision
 * Skybox
 * Crude FPS Camera
 * Multiplayer
+  * Players can join/leave lobby freely
+  * Built on TCP
+  * Client Authorative
 
-To-Be Implemented:
-* Normal mapping (Entity and Terrain)
-* Water (reflection/refraction)
-* Reflections
+## To-Be Implemented:
+* Normal mapping
+  * Entity
+  * Terrain
+* Water
+  * Reflection
+  * Refraction
 * Multiple light sources
 * Shadows (Shadow Mapping -> Percentage Closer Filtering -> Cascading Shadow Maps)
 * Particle renderer
-* LOD
+* Text/UI renderer
+* LOD (Level_Of_Detail)
+  * Objects
+  * Terrain
 * Object Collision
+* Multiplayer imporvements
+  * Client Interpolation
+  * Server Authorative
+  * UDP
+  * Player names
 
