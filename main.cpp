@@ -18,6 +18,8 @@
 
 #undef main
 
+using namespace std;
+
 extern map<string, vector<unsigned int>> cache;
 
 //globals
@@ -53,7 +55,7 @@ void generateEntities(const char* obj, const char* tex, int amount) {
 }
 
 void init() {
-	cout << "Generating Terrain.." << std::endl;
+	cout << "Generating Terrain.." << endl;
 
 	renderer = new Renderer(width, height);
 
@@ -61,7 +63,7 @@ void init() {
 	vector<string> terrainTextures{ "gameFiles/Terrain/Blendmap.png","gameFiles/Terrain/Rock.png","gameFiles/Terrain/Grass.png","gameFiles/Terrain/Path.png","gameFiles/Terrain/Sand.png" };
 	glm::mat4 terrainModelMatrix = glm::translate(glm::mat4(1), glm::vec3(0, 0, 0));
 
-	genTerrain("gameFiles/Terrain/heightmap2_scaled.png", terrainTextures, terrainModelMatrix, renderer->getTerrain(), true);
+	genTerrain("gameFiles/Terrain/heightmap2_scaled.png", terrainTextures, terrainModelMatrix, renderer->getTerrain(), false);
 
 	//place player above ground
 	float terrainSize = renderer->getTerrain()->mapSize;
@@ -71,7 +73,7 @@ void init() {
 	g_light = glm::vec3(25.0f, terrainSize / 2, terrainSize * 2); //sunset position (match skybox)
 
 	// load game Entities
-	std::cout << "Loading game Entities..." << std::endl;
+	cout << "Loading game Entities..." << endl;
 	
 	glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrainSize / 3.0f, renderer->getTerrain()->getHeightAt((int)(terrainSize / 3.0f), (int)(terrainSize / 3.0f)), terrainSize / 3.0f));
 	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.7f));
@@ -82,7 +84,7 @@ void init() {
 	loadEntity("gameFiles/moonbrook_inn.obj", "gameFiles/moonbrook_inn.png", nullptr, tempModelMatrix);
 	
 	tempModelMatrix = glm::translate(glm::mat4(1), camera.getPosition());
-	readOBJ_better("gameFiles/Player.obj", "gameFiles/Character.png", nullptr, tempModelMatrix); //cache player model
+	readOBJ_better("gameFiles/Player.obj", "gameFiles/Character.jpg", nullptr, tempModelMatrix); //cache player model
 
 	//random entities
 	generateEntities("gameFiles/Palm.obj", "gameFiles/Palm.png", 150);
@@ -114,8 +116,14 @@ int main(int argc, char* argv[]) {
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 	// Networking
-	TCPClient* client = new TCPClient("localhost", "8080");
-	std::future<void> tcpPromise;
+	cout << "Enter server url (url:port) ";
+	string server;
+	getline(cin, server);
+	string url = server.substr(0, server.find(":"));
+	string port = server.substr(server.find(":") + 1, server.size());
+	cout << url << port << endl;
+	TCPClient* client = new TCPClient(url, port);
+	future<void> tcpPromise;
 	if (!client->connectedStatus) //if can't connect, play offline
 		online = false;
 
@@ -126,7 +134,7 @@ int main(int argc, char* argv[]) {
 	init(); //load game data
 
 	SetConsoleTextAttribute(hConsole, 2);
-	std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
+	cout << "OpenGL Version: " << glGetString(GL_VERSION) << endl;
 
 	SetConsoleTextAttribute(hConsole, 7);
 
@@ -146,8 +154,8 @@ int main(int argc, char* argv[]) {
 
 		//update
 		if (online) { //players
-			if (firstLoop || tcpPromise.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
-				tcpPromise = std::async(std::launch::async, &TCPClient::update, client, camera.getPosition(), camera.getAngles().y, renderer);
+			if (firstLoop || tcpPromise.wait_for(chrono::milliseconds(0)) == future_status::ready) {
+				tcpPromise = async(launch::async, &TCPClient::update, client, camera.getPosition(), camera.getAngles().y, renderer);
 				firstLoop = false;
 			}
 		}

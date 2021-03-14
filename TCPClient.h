@@ -26,7 +26,7 @@
 
 class TCPClient {
 public:
-	TCPClient(const char* ip, const char* PORT);
+	TCPClient(string ip, string PORT);
 
 	void update(glm::vec3 position, float yaw, Renderer* renderer);
 

@@ -1,7 +1,7 @@
 #include "TCPClient.h"
 #include <chrono>
 
-TCPClient::TCPClient(const char* ip, const char* PORT) {
+TCPClient::TCPClient(string ip, string PORT) {
 
 	this->connectedStatus = true;
 
@@ -16,7 +16,7 @@ TCPClient::TCPClient(const char* ip, const char* PORT) {
 	hints.ai_protocol = IPPROTO_TCP;
 
 	// Resolve the server address and port
-	iResult = getaddrinfo(ip, PORT, &hints, &result);
+	iResult = getaddrinfo(ip.c_str(), PORT.c_str(), &hints, &result);
 	if (iResult != 0) {
 		printf("getaddrinfo failed with error: %d\n", iResult);
 		WSACleanup();
@@ -51,7 +51,7 @@ TCPClient::TCPClient(const char* ip, const char* PORT) {
 		WSACleanup();
 		this->connectedStatus = false;
 	}
-
+	// Ping Check (RTT)
 	if (this->connectedStatus) {
 		chrono::milliseconds ms = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch() );
 		sendbuf = "RTT_CHECK:" + std::to_string(ms.count());
