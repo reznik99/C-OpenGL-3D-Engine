@@ -43,156 +43,141 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//RENDER ENTITIES
-	{
-		glUseProgram(g_EntityProgramId);
-		this->loadUniforms(g_EntityProgramId, light, camera);
+	glUseProgram(g_EntityProgramId);
+	this->loadUniforms(g_EntityProgramId, light, camera);
 
-		for (unsigned int i = 0; i < entities.size(); i++) {
-			Entity* obj = &entities[i];
-
-			//load uniform for model matrix
-			int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
-			glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj->modelMatrix[0][0]);
-
-			//bind diffuse tex
-			glUniform1i(glGetUniformLocation(g_EntityProgramId, "diffuseTex"), 0);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, obj->textureId);
-			//bind normal map
-			if (obj->normalTextureId) {
-				glUniform1i(glGetUniformLocation(g_EntityProgramId, "normalTex"), 1);
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, obj->normalTextureId);
-			}
-			//bind vao
-			glBindVertexArray(obj->VAO);
-			//render
-			glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
-			glBindVertexArray(0);
-		}
+	for (unsigned int i = 0; i < entities.size(); i++) 
+		renderEntity(entities.at(i));
 		
-
-		glUseProgram(g_EntityProgramId);
-		this->loadUniforms(g_EntityProgramId, light, camera);
-		
-		for (auto const& x : this->players) {
-			string name = x.first;
-			Entity* obj = x.second;
-
-			//load uniform for model matrix
-			int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
-			glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj->modelMatrix[0][0]);
-
-			//bind diffuse tex
-			glUniform1i(glGetUniformLocation(g_EntityProgramId, "diffuseTex"), 0);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, obj->textureId);
-			
-			//bind vao
-			glBindVertexArray(obj->VAO);
-			//render
-			glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
-			glBindVertexArray(0);
-		}
-	}
+	for (auto const& x : this->players) 
+		renderEntity(x.second);
 
 	//RENDER TERRAINS
-	{
-		glUseProgram(g_TerrainProgramId);
-		this->loadUniforms(g_TerrainProgramId, light, camera);
-
-		//load uniform for model matrix
-		int modelMatrixId = glGetUniformLocation(g_TerrainProgramId, "modelMatrix");
-		glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &terrain.modelMatrix[0][0]);
-		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "blendMapTex"), 0);
-		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex1"), 1);
-		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex2"), 2);
-		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex3"), 3);
-		glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex4"), 4);
-		//bind texture
-		for (unsigned int i = 0; i < terrain.textureIds.size(); i++) {
-			glActiveTexture(GL_TEXTURE0 + i);
-			glBindTexture(GL_TEXTURE_2D, terrain.textureIds.at(i));
-		}
-		//bind vao
-		glBindVertexArray(terrain.VAO);
-		//render
-		glDrawElements(GL_TRIANGLES, terrain.indexBufferSize, GL_UNSIGNED_INT, 0);
-		//unbind
-		glBindVertexArray(0);
-	}
+	glUseProgram(g_TerrainProgramId);
+	this->loadUniforms(g_TerrainProgramId, light, camera);
 	
+	renderTerrain();
+
 	//RENDER SKYBOX
-	{
-		glUseProgram(g_SkyboxProgramId);
-		glm::mat4 skyboxViewMatrix = camera.getViewMatrix();
-		skyboxViewMatrix[3][0] = 0;
-		skyboxViewMatrix[3][1] = 0;		//so player never moves closer to skybox
-		skyboxViewMatrix[3][2] = 0;
-		int projMatrixId = glGetUniformLocation(g_SkyboxProgramId, "projMatrix");
-		int viewMatrixId = glGetUniformLocation(g_SkyboxProgramId, "viewMatrix");
-		glUniformMatrix4fv(projMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
-		glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &skyboxViewMatrix[0][0]);
-		//bind texture
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, this->cubeMapTextureId);
-
-		glBindBuffer(GL_ARRAY_BUFFER, this->skyboxVBO);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glDrawArrays(GL_TRIANGLES, 0, this->VERTICES.size());
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		glUseProgram(0);
-	}
+	glUseProgram(g_SkyboxProgramId);
+	
+	renderSkybox(camera);
 
 }
+
+void Renderer::renderEntity(Entity* obj) {
+	//load uniform for model matrix
+	int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
+	glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &obj->modelMatrix[0][0]);
+
+	//bind diffuse tex
+	glUniform1i(glGetUniformLocation(g_EntityProgramId, "diffuseTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, obj->textureId);
+	//bind normal map
+	if (obj->normalTextureId) {
+		glUniform1i(glGetUniformLocation(g_EntityProgramId, "normalTex"), 1);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, obj->normalTextureId);
+	}
+	//bind vao
+	glBindVertexArray(obj->VAO);
+	//render
+	glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+}
+
+void Renderer::renderTerrain() {
+	//load uniform for model matrix
+	int modelMatrixId = glGetUniformLocation(g_TerrainProgramId, "modelMatrix");
+	glUniformMatrix4fv(modelMatrixId, 1, GL_FALSE, &terrain.modelMatrix[0][0]);
+	glUniform1i(glGetUniformLocation(g_TerrainProgramId, "blendMapTex"), 0);
+	glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex1"), 1);
+	glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex2"), 2);
+	glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex3"), 3);
+	glUniform1i(glGetUniformLocation(g_TerrainProgramId, "tex4"), 4);
+	//bind texture
+	for (unsigned int i = 0; i < terrain.textureIds.size(); i++) {
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, terrain.textureIds.at(i));
+	}
+	//bind vao
+	glBindVertexArray(terrain.VAO);
+	//render
+	glDrawElements(GL_TRIANGLES, terrain.indexBufferSize, GL_UNSIGNED_INT, 0);
+	//unbind
+	glBindVertexArray(0);
+}
+
+void Renderer::renderSkybox(Camera& camera) {
+	glm::mat4 skyboxViewMatrix = camera.getViewMatrix();
+	skyboxViewMatrix[3][0] = 0;
+	skyboxViewMatrix[3][1] = 0;		//so player never moves closer to skybox
+	skyboxViewMatrix[3][2] = 0;
+	int projMatrixId = glGetUniformLocation(g_SkyboxProgramId, "projMatrix");
+	int viewMatrixId = glGetUniformLocation(g_SkyboxProgramId, "viewMatrix");
+	glUniformMatrix4fv(projMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
+	glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &skyboxViewMatrix[0][0]);
+	//bind texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, this->cubeMapTextureId);
+
+	glBindBuffer(GL_ARRAY_BUFFER, this->skyboxVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glDrawArrays(GL_TRIANGLES, 0, this->VERTICES.size());
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glUseProgram(0);
+}
+
 
 void Renderer::update() {
-	//update entities
-	for (Entity e : this->entities)
-		e.update();
+	// Update entities
+	for (Entity* e : entities)
+		e->update();
 	
 }
 
-void Renderer::processEntity(Entity e) {
-	//should sort by texture/model to speedup rendering
+void Renderer::processEntity(Entity* e) {
+	// Should sort by texture/model to speedup rendering? Instance Rendering
 	this->entities.push_back(e); 
 }
 
 void Renderer::loadUniforms(unsigned int _pid, glm::vec3& light, Camera& camera) {
-	//load uniforms (same for all obj's)
+	// Load uniforms (same for all obj's)
 	int projMatrixId = glGetUniformLocation(_pid, "projMatrix");
 	int viewMatrixId = glGetUniformLocation(_pid, "viewMatrix");
 	int lightPositionId = glGetUniformLocation(_pid, "lightPosition");
 	glUniformMatrix4fv(projMatrixId, 1, GL_FALSE, &projectionMatrix[0][0]);
 	glUniformMatrix4fv(viewMatrixId, 1, GL_FALSE, &camera.getViewMatrix()[0][0]);
-	glUniform3f(lightPositionId, light[0], light[1], light[2]);
+	glUniform3f(lightPositionId, light.x, light.y, light.z);
 }
 
 void Renderer::cleanUp() {
-	//delete entities
-	for (Entity e : this->entities) {
-		//delete VBOs
-		for(unsigned int _id : e.VBOs)
+	// Delete entities
+	for (Entity* e : entities) {
+		// Delete VBOs
+		for(unsigned int _id : e->VBOs)
 			glDeleteBuffers(1, &_id);
-		//delete VAO
-		glDeleteVertexArrays(1, &e.VAO);
+		// Delete VAO
+		glDeleteVertexArrays(1, &e->VAO);
 	}
-	entities.clear(); //calls deconstructor in all entities
+	entities.clear(); // Calls deconstructor in all entities
 
-	//delete skybox data
+	// Delete skybox data
 	glDeleteBuffers(1, &this->skyboxVBO);
 
-	//delete terrain data
+	// Delete terrain data
 	for (unsigned int _id : terrain.VBOs)
 		glDeleteBuffers(1, &_id);
 	glDeleteVertexArrays(1, &terrain.VAO);
 
-	//delete shaders
+	// Delete shaders
 	for (unsigned int _id : shaderIds)
 		glDeleteShader(_id);
-	//deletePrograms
+
+	// DeletePrograms
 	glDeleteProgram(g_EntityProgramId);
 	glDeleteProgram(g_TerrainProgramId);
 	glDeleteProgram(g_SkyboxProgramId);
@@ -213,7 +198,7 @@ unsigned int Renderer::createShader(unsigned int type, const string& source) {
 	int _status = false;
 	glGetShaderiv(_id, GL_COMPILE_STATUS, &_status);
 
-	//invalid shader print error
+	// Invalid shader print error
 	if (_status == GL_FALSE) {
 		int _length = 0;
 		glGetShaderiv(_id, GL_INFO_LOG_LENGTH, &_length);
@@ -250,7 +235,7 @@ unsigned int Renderer::createShaderProgram(const string& vertexShaderSource,
 		int _status = 0;
 		glGetProgramiv(_programId, GL_LINK_STATUS, &_status);
 
-		//couldnt link shaders
+		// Couldn't link shaders
 		if (_status == GL_FALSE) {
 			int _length = 0;
 			glGetProgramiv(_programId, GL_INFO_LOG_LENGTH, &_length);

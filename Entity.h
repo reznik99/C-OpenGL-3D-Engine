@@ -27,8 +27,8 @@ public:
 
 	unsigned int textureId = 0;
 	unsigned int normalTextureId = 0;
-	unsigned int indexBufferSize = 0; //for glDrawElements
+	unsigned int indexBufferSize = 0;   // glDrawElements
 
-	glm::mat4 modelMatrix; //position, rotation and scale of entity
+	glm::mat4 modelMatrix;				// position, rotation and scale of entity
 };
 

@@ -12,9 +12,15 @@ public:
 
 	void render(glm::vec3& light, Camera& camera);
 
+	void renderEntity(Entity* obj);
+	
+	void renderTerrain();
+
+	void renderSkybox(Camera& camera);
+
 	void update();
 
-	void processEntity(Entity e);
+	void processEntity(Entity* e);
 
 	void loadUniforms(unsigned int _pid, glm::vec3& light, Camera& camera);
 
@@ -37,7 +43,7 @@ private:
 
 	unsigned int shaderIds[6]; //vertexEntities - fragEntities | vertexTerrain - fragTerrain ... etc
 
-	vector<Entity> entities;
+	vector<Entity*> entities;
 	Terrain terrain;
 	glm::mat4 projectionMatrix;
 

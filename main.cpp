@@ -22,19 +22,18 @@ using namespace std;
 
 extern map<string, vector<unsigned int>> cache;
 
-//globals
+// Globals
 const unsigned int width = 1920, height = 1080;
 const int FPS = 60;
 const int frameDelay = 1000 / FPS;
-bool online = true;
 
-Renderer* renderer = nullptr; //renderer initialized after main()
-Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));	//players position/view
-glm::vec3 g_light;  //global illumination
+Renderer* renderer = nullptr;							// Renderer initialized after main()
+Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));	// Players position/view
+glm::vec3 g_light;										// Global illumination
 
 
 void loadEntity(const char* filename, const char* textureFile, const char* textureNormalFile, glm::mat4 modelMatrix) {
-	Entity newEntity = *readOBJ_better(filename, textureFile, textureNormalFile, modelMatrix);
+	Entity* newEntity = readOBJ_better(filename, textureFile, textureNormalFile, modelMatrix);
 
 	renderer->processEntity(newEntity);
 }
@@ -59,20 +58,20 @@ void init() {
 
 	renderer = new Renderer(width, height);
 
-	//generate terrain
+	// Generate terrain
 	vector<string> terrainTextures{ "gameFiles/Terrain/Blendmap.png","gameFiles/Terrain/Rock.png","gameFiles/Terrain/Grass.png","gameFiles/Terrain/Path.png","gameFiles/Terrain/Sand.png" };
 	glm::mat4 terrainModelMatrix = glm::translate(glm::mat4(1), glm::vec3(0, 0, 0));
 
 	genTerrain("gameFiles/Terrain/heightmap2_scaled.png", terrainTextures, terrainModelMatrix, renderer->getTerrain(), false);
 
-	//place player above ground
+	// Place player above ground
 	float terrainSize = renderer->getTerrain()->mapSize;
 	camera.setPosition(glm::vec3(terrainSize / 2, renderer->getTerrain()->getHeightAt((int)(terrainSize / 2), (int)(terrainSize / 2)) + camera.playerHeight, terrainSize / 2));
 
-	//set light
+	// Set light
 	g_light = glm::vec3(25.0f, terrainSize / 2, terrainSize * 2); //sunset position (match skybox)
 
-	// load game Entities
+	// Load game Entities
 	cout << "Loading game Entities..." << endl;
 	
 	glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrainSize / 3.0f, renderer->getTerrain()->getHeightAt((int)(terrainSize / 3.0f), (int)(terrainSize / 3.0f)), terrainSize / 3.0f));
@@ -86,7 +85,7 @@ void init() {
 	tempModelMatrix = glm::translate(glm::mat4(1), camera.getPosition());
 	readOBJ_better("gameFiles/Player.obj", "gameFiles/Character.jpg", nullptr, tempModelMatrix); //cache player model
 
-	//random entities
+	// Random entities
 	generateEntities("gameFiles/Palm.obj", "gameFiles/Palm.png", 150);
 	generateEntities("gameFiles/Palm2_low.obj", "gameFiles/Palm2.jpg", 150);
 	generateEntities("gameFiles/grass.obj", "gameFiles/grass.png", 400);
@@ -94,9 +93,11 @@ void init() {
 
 
 
-void cleanUp(SDL_Window* _window, SDL_GLContext _context) {
+void cleanUp(SDL_Window* _window, SDL_GLContext _context, TCPClient* client) {
+	if (client->connectedStatus)
+		client->cleanUp();
 	renderer->cleanUp();
-	//close window
+	// Close window
 	SDL_Quit();
 	SDL_DestroyWindow(_window);
 	SDL_GL_DeleteContext(_context);
@@ -117,43 +118,40 @@ int main(int argc, char* argv[]) {
 
 	// Networking
 	cout << "Enter server url (url:port) ";
-	string server;
-	getline(cin, server);
-	string url = server.substr(0, server.find(":"));
-	string port = server.substr(server.find(":") + 1, server.size());
-	cout << url << port << endl;
-	TCPClient* client = new TCPClient(url, port);
+	string url;
+	getline(cin, url);
+	string port = url.substr(url.find(":") + 1, url.size());
+
+	TCPClient* client = new TCPClient(url.substr(0, url.find(":")), port);
 	future<void> tcpPromise;
-	if (!client->connectedStatus) //if can't connect, play offline
-		online = false;
 
 
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(hConsole, 12); //terminal color
+	SetConsoleTextAttribute(hConsole, 12); // Terminal color
 
-	init(); //load game data
+	init(); // Load game data
 
 	SetConsoleTextAttribute(hConsole, 2);
 	cout << "OpenGL Version: " << glGetString(GL_VERSION) << endl;
 
 	SetConsoleTextAttribute(hConsole, 7);
 
-	//framerate control
+	// Framerate control
 	Uint32 frameStart;
 	int frameTime;
 	bool firstLoop = true;
 	
-	//main loop
+	// Game loop
 	while (1) {
 		bool _break = false;
 		frameStart = SDL_GetTicks();
 
-		//handle user events
+		// Handle user events
 		while (SDL_PollEvent(&_event))
 			if (camera.checkInputs(_event)) _break = true;
 
-		//update
-		if (online) { //players
+		// Update
+		if (client->connectedStatus) {
 			if (firstLoop || tcpPromise.wait_for(chrono::milliseconds(0)) == future_status::ready) {
 				tcpPromise = async(launch::async, &TCPClient::update, client, camera.getPosition(), camera.getAngles().y, renderer);
 				firstLoop = false;
@@ -163,13 +161,13 @@ int main(int argc, char* argv[]) {
 		renderer->update();
 		camera.update(renderer->getTerrain());
 
-		//render
+		// Render
 		renderer->render(g_light, camera);
 
-		//display
+		// Display
 		SDL_GL_SwapWindow(_window);
 
-
+		// Sleep
 		frameTime = SDL_GetTicks() - frameStart;
 		if (frameDelay > frameTime)
 			SDL_Delay(frameDelay - frameTime);
@@ -177,10 +175,7 @@ int main(int argc, char* argv[]) {
 		if (_break) break;
 	}
 
-	cleanUp(_window, _context);
-
-	if (online)
-		client->cleanUp();
+	cleanUp(_window, _context, client);
 
 	return 0;
 }
