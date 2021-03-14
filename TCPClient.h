@@ -34,13 +34,15 @@ public:
 
 	void cleanUp();
 
+	void calculateRTT();
+
 	WSADATA wsaData;
 	SOCKET ConnectSocket = INVALID_SOCKET;
 	struct addrinfo* result = NULL,
 		* ptr = NULL,
 		hints;
 
-	std::string sendbuf;
+	string sendbuf;
 	char recvbuf[DEFAULT_BUFLEN];
 	int iResult;
 	int recvbuflen = DEFAULT_BUFLEN;

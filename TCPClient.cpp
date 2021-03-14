@@ -51,32 +51,17 @@ TCPClient::TCPClient(string ip, string PORT) {
 		WSACleanup();
 		this->connectedStatus = false;
 	}
+
 	// Ping Check (RTT)
 	if (this->connectedStatus) {
-		chrono::milliseconds ms = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch() );
-		sendbuf = "RTT_CHECK:" + std::to_string(ms.count());
-
-		iResult = send(ConnectSocket, sendbuf.data(), sendbuf.size(), 0);
-		if (iResult == SOCKET_ERROR) {
-			printf("send failed with error: %d\n", WSAGetLastError());
-			closesocket(ConnectSocket);
-			WSACleanup();
-		}
-
-		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-		string input = string(recvbuf);
-		if (input == "RTT_CHECK") {
-			cout << "RTT: " << (chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count() - ms.count()) << "ms" << endl;
-		}
+		this->calculateRTT();
 	}
 }
 
 void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer) {
-	// Send an initial buffer
-	sendbuf = std::to_string(position.x) + " "
-		+ std::to_string(position.y) + " "
-		+ std::to_string(position.z) + " "
-		+ std::to_string(yaw) + "|";
+	// Send Player info
+	sendbuf = to_string(position.x) + " " + to_string(position.y) + " "
+		+ to_string(position.z) + " " + to_string(yaw);
 
 	iResult = send(ConnectSocket, sendbuf.data(), sendbuf.size(), 0);
 	if (iResult == SOCKET_ERROR) {
@@ -90,26 +75,23 @@ void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer) {
 	string playerId;
 	glm::vec4 output = readBufToVectors(recvbuf, playerId);
 
-	
-	if (renderer->players.count(playerId)) { // update player
+	// update player
+	if (renderer->players.count(playerId)) { 
 		Entity* player = renderer->players.at(playerId);
 		player->modelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y - 2.5f, output.z));
 		player->modelMatrix = glm::rotate(player->modelMatrix, glm::radians(output.w), glm::vec3(0, 1, 0));
-		cout << "Player: " << playerId << " " << glm::to_string(player->modelMatrix[3])  << endl;
 	}
-	else { // create new player entity from cache in loader
+	// create new player entity from cache in loader
+	else { 
 		cout << "New Player joined server: " << playerId << endl;
 		
 		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y, output.z));
 		tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(output.w), glm::vec3(0, 1, 0));
 
-		//Entity* newPlayer = new Entity();
-		//newPlayer->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &tempModelMatrix);
-		Entity* newPlayer = readOBJ_better("gameFiles/Player.obj", "gameFiles/Character.png", nullptr, tempModelMatrix);
+		Entity* newPlayer = readOBJ_better("gameFiles/Player.obj", "gameFiles/Character.jpg", nullptr, tempModelMatrix);
 		renderer->players.insert(pair<string, Entity*>(playerId, newPlayer));
 
-		cout << "player pos: " << glm::to_string(output) << endl;
-		cout << "_indexBufferSize: " << newPlayer->indexBufferSize << endl;
+		cout << "New Player spawned at: " << glm::to_string(output) << endl;
 	}
 }
 
@@ -136,3 +118,25 @@ void TCPClient::cleanUp() {
 	WSACleanup();
 }
 
+void TCPClient::calculateRTT() {
+	using std::chrono::duration_cast;
+	using std::chrono::milliseconds;
+
+	milliseconds ms = duration_cast<milliseconds>(chrono::system_clock::now().time_since_epoch());
+	sendbuf = "RTT_CHECK";
+
+	iResult = send(ConnectSocket, sendbuf.data(), sendbuf.size(), 0);
+	if (iResult == SOCKET_ERROR) {
+		printf("send failed with error: %d\n", WSAGetLastError());
+		closesocket(ConnectSocket);
+		WSACleanup();
+	}
+
+	iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+	string input = string(recvbuf);
+	if (input == "RTT_CHECK") {
+		milliseconds now = duration_cast<milliseconds>(chrono::system_clock::now().time_since_epoch());
+		long long RTT = now.count() - ms.count();
+		cout << "RTT: " << RTT << "ms" << endl;
+	}
+}
