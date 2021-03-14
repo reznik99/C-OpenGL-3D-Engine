@@ -55,7 +55,7 @@ void Entity::loadCached(unsigned int _VAO, unsigned int _vertVBOId, unsigned int
 }
 
 int Entity::update() {
-	this->modelMatrix = glm::rotate(modelMatrix, 3.14f / 200, glm::vec3(0, 1.0, 0));
+	//this->modelMatrix = glm::rotate(modelMatrix, 3.14f / 200, glm::vec3(0, 1.0, 0));
 
 	return 0;
 }

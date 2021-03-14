@@ -288,7 +288,7 @@ string readShader(const char* filename) {
 
 /* TERRAIN */
 
-void genTerrain(const char* heightMapFile, vector<string> textures , glm::mat4 modelMatrix, Terrain* newTerrain) {
+void genTerrain(const char* heightMapFile, vector<string> textures , glm::mat4 modelMatrix, Terrain* newTerrain, bool flat) {
 
 	//read heightMapFile
 	int width, height, nrChannels;
@@ -312,13 +312,13 @@ void genTerrain(const char* heightMapFile, vector<string> textures , glm::mat4 m
 		for (int j = 0; j < VERTEX_COUNT; j++) {
 			//vertices
 			float vertHeight = getHeight(i, j, data, height, nrChannels, newTerrain->MAX_HEIGHT);
-			heights[i][j] = vertHeight; //add height to collision buffer
+			heights[i][j] = flat ? 0 : vertHeight; //add height to collision buffer
 			vertices[vertexPointer * 3] = (float)j / ((float)VERTEX_COUNT - 1) * newTerrain->mapSize;
-			vertices[vertexPointer * 3 + 1] = vertHeight;
+			vertices[vertexPointer * 3 + 1] = flat ? 0 : vertHeight;
 			vertices[vertexPointer * 3 + 2] = (float)i / ((float)VERTEX_COUNT - 1) * newTerrain->mapSize;
 			//normals
 			glm::vec3 normal = glm::vec3(0, 1, 0);//calculateNormal(j, i, image);
-			normal = calculateNormal(i, j, data, height, nrChannels, newTerrain->MAX_HEIGHT);
+			normal = flat ? glm::vec3(0, 1, 0) : calculateNormal(i, j, data, height, nrChannels, newTerrain->MAX_HEIGHT);
 			normals[vertexPointer * 3] = normal.x;
 			normals[vertexPointer * 3 + 1] = normal.y;
 			normals[vertexPointer * 3 + 2] = normal.z;

@@ -5,8 +5,6 @@
 #include "Camera.h"
 #include "Loader.h"
 
-using namespace std;
-
 class Renderer
 {
 public:

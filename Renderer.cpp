@@ -71,14 +71,13 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 			glBindVertexArray(0);
 		}
 		
+
 		glUseProgram(g_EntityProgramId);
 		this->loadUniforms(g_EntityProgramId, light, camera);
-
-		// Iterate over the map using Iterator till end.
-		map<string, Entity*>::iterator it = players.begin();
-		while (it != players.end()) {
-			string name = it->first;
-			Entity* obj = it->second;
+		
+		for (auto const& x : this->players) {
+			string name = x.first;
+			Entity* obj = x.second;
 
 			//load uniform for model matrix
 			int modelMatrixId = glGetUniformLocation(g_EntityProgramId, "modelMatrix");
@@ -94,7 +93,6 @@ void Renderer::render(glm::vec3& light, Camera& camera) {
 			//render
 			glDrawElements(GL_TRIANGLES, obj->indexBufferSize, GL_UNSIGNED_INT, 0);
 			glBindVertexArray(0);
-			it++;
 		}
 	}
 

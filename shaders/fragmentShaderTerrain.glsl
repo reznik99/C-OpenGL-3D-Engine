@@ -15,7 +15,7 @@ uniform sampler2D tex3;
 uniform sampler2D tex4;
 
 float ambientLighting = 0.2f;
-float specularStrength = 1.0f;    //Should read from specular map
+float specularStrength = 0.5f;    //Should read from specular map
 float shininess = 16.0f;		
 float tiling = 25.0f;
 vec3 skyColor = vec3(0, 0.4f, 0.7f); //should be uniform
@@ -38,6 +38,11 @@ void main() {
 	vec4 tex4Col = texture2D(tex4, tiledCoords) * blendMapColour.b;
 
 	vec4 totalColour = tex1Col + tex2Col + tex3Col + tex4Col;
+
+	//Make tiles shinier than other terrains (This could be loaded from a separate specularMap
+	if(blendMapColour.g > blendMapColour.r && blendMapColour.g > blendMapColour.b){
+		specularStrength = 1.0f;
+	}
 
 	/* Phong lighting (done in WORLD space) */
 	// Ambient
