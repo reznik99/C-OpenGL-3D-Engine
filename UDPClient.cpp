@@ -4,7 +4,7 @@
 
 
 UDPClient::UDPClient(string server, string PORT) {
-	bool connectedStatus = true;
+	this->connectedStatus = true;
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -26,14 +26,18 @@ UDPClient::UDPClient(string server, string PORT) {
 	// the receiver and the specified port number.
 	dest.sin_family = AF_INET;
 	dest.sin_port = htons(9998);
-	inet_pton(AF_INET, server.c_str(), &dest.sin_addr.s_addr);
-
+	inet_pton(AF_INET, server.c_str(), &dest.sin_addr.s_addr); // (might not work with hostnames?)
 
 
 	sendbuf = "CONNECT&0.0&0.0&0.0&0.0&Frank";
 	iResult = sendto(ConnectSocket, sendbuf.data(), sendbuf.size(), 0, (SOCKADDR*)&dest, sizeof(dest));
 	if (iResult == SOCKET_ERROR) {
 		printf("send failed with error: %d\n", WSAGetLastError());
+	}
+
+	// Ping Check (RTT)
+	if (this->connectedStatus) {
+		this->calculateRTT();
 	}
 }
 
@@ -107,6 +111,24 @@ void UDPClient::cleanUp()
 	}
 }
 
-void UDPClient::calculateRTT()
-{
+void UDPClient::calculateRTT() {
+	using std::chrono::duration_cast;
+	using std::chrono::milliseconds;
+
+	milliseconds ms = duration_cast<milliseconds>(chrono::system_clock::now().time_since_epoch());
+	sendbuf = "RTT_CHECK";
+
+	//iResult = send(ConnectSocket, sendbuf.data(), sendbuf.size(), 0);
+	iResult = sendto(ConnectSocket, sendbuf.data(), sendbuf.size(), 0, (SOCKADDR*)&dest, sizeof(dest));
+	if (iResult == SOCKET_ERROR) {
+		printf("Failed RTT datagram send: %d\n", WSAGetLastError());
+	}
+
+	iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+	string input = string(recvbuf);
+	if (input == "RTT_CHECK") {
+		milliseconds now = duration_cast<milliseconds>(chrono::system_clock::now().time_since_epoch());
+		long long RTT = now.count() - ms.count();
+		cout << "RTT: " << RTT << "ms" << endl;
+	}
 }
