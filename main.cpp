@@ -15,6 +15,7 @@
 #include "Loader.h"
 #include "Renderer.h"
 #include "TCPClient.h"
+#include "UDPClient.h"
 
 #undef main
 
@@ -93,7 +94,7 @@ void init() {
 
 
 
-void cleanUp(SDL_Window* _window, SDL_GLContext _context, TCPClient* client) {
+void cleanUp(SDL_Window* _window, SDL_GLContext _context, UDPClient* client) {
 	if (client->connectedStatus)
 		client->cleanUp();
 	renderer->cleanUp();
@@ -117,12 +118,13 @@ int main(int argc, char* argv[]) {
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 	// Networking
-	cout << "Enter server url (url:port) ";
+	cout << "Enter server ip (ip/domain:port) ";
 	string url;
 	getline(cin, url);
 	string port = url.substr(url.find(":") + 1, url.size());
 
-	TCPClient* client = new TCPClient(url.substr(0, url.find(":")), port);
+	//TCPClient* client = new TCPClient(url.substr(0, url.find(":")), port);
+	UDPClient* client = new UDPClient(url.substr(0, url.find(":")), port);
 	future<void> tcpPromise;
 
 
@@ -153,7 +155,7 @@ int main(int argc, char* argv[]) {
 		// Update
 		if (client->connectedStatus) {
 			if (firstLoop || tcpPromise.wait_for(chrono::milliseconds(0)) == future_status::ready) {
-				tcpPromise = async(launch::async, &TCPClient::update, client, camera.getPosition(), camera.getAngles().y, renderer);
+				tcpPromise = async(launch::async, &UDPClient::update, client, camera.getPosition(), camera.getAngles().y, renderer);
 				firstLoop = false;
 			}
 		}
