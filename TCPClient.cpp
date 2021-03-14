@@ -1,9 +1,9 @@
 #include "TCPClient.h"
-
+#include <chrono>
 
 TCPClient::TCPClient(const char* ip, const char* PORT) {
 
-	connectedStatus = true;
+	this->connectedStatus = true;
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -20,7 +20,7 @@ TCPClient::TCPClient(const char* ip, const char* PORT) {
 	if (iResult != 0) {
 		printf("getaddrinfo failed with error: %d\n", iResult);
 		WSACleanup();
-		connectedStatus = true;
+		this->connectedStatus = true;
 	}
 
 	// Attempt to connect to an address until one succeeds
@@ -49,9 +49,26 @@ TCPClient::TCPClient(const char* ip, const char* PORT) {
 	if (ConnectSocket == INVALID_SOCKET) {
 		printf("Unable to connect to server!\n");
 		WSACleanup();
-		connectedStatus = false;
+		this->connectedStatus = false;
 	}
 
+	if (this->connectedStatus) {
+		chrono::milliseconds ms = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch() );
+		sendbuf = "RTT_CHECK:" + std::to_string(ms.count());
+
+		iResult = send(ConnectSocket, sendbuf.data(), sendbuf.size(), 0);
+		if (iResult == SOCKET_ERROR) {
+			printf("send failed with error: %d\n", WSAGetLastError());
+			closesocket(ConnectSocket);
+			WSACleanup();
+		}
+
+		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+		string input = string(recvbuf);
+		if (input == "RTT_CHECK") {
+			cout << "RTT: " << (chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count() - ms.count()) << "ms" << endl;
+		}
+	}
 }
 
 void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer) {
@@ -69,18 +86,15 @@ void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer) {
 	}
 
 	iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-
-	//char** chunks;
-	//const char delimeter = '|';
-    //char* data = strtok_s(recvbuf, &delimeter, chunks);
-
+	
 	string playerId;
 	glm::vec4 output = readBufToVectors(recvbuf, playerId);
 
 	
 	if (renderer->players.count(playerId)) { // update player
 		Entity* player = renderer->players.at(playerId);
-		player->modelMatrix[3] = output;
+		player->modelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y - 2.5f, output.z));
+		player->modelMatrix = glm::rotate(player->modelMatrix, glm::radians(output.w), glm::vec3(0, 1, 0));
 		cout << "Player: " << playerId << " " << glm::to_string(player->modelMatrix[3])  << endl;
 	}
 	else { // create new player entity from cache in loader
@@ -91,7 +105,7 @@ void TCPClient::update(glm::vec3 position, float yaw, Renderer* renderer) {
 
 		//Entity* newPlayer = new Entity();
 		//newPlayer->loadCached(ids[0], ids[1], ids[2], ids[3], ids[4], ids[5], ids[6], &tempModelMatrix);
-		Entity* newPlayer = readOBJ_better("gameFiles/Player.obj", "gameFiles/Well.png", nullptr, tempModelMatrix);
+		Entity* newPlayer = readOBJ_better("gameFiles/Player.obj", "gameFiles/Character.png", nullptr, tempModelMatrix);
 		renderer->players.insert(pair<string, Entity*>(playerId, newPlayer));
 
 		cout << "player pos: " << glm::to_string(output) << endl;

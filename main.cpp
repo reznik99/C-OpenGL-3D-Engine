@@ -82,13 +82,7 @@ void init() {
 	loadEntity("gameFiles/moonbrook_inn.obj", "gameFiles/moonbrook_inn.png", nullptr, tempModelMatrix);
 	
 	tempModelMatrix = glm::translate(glm::mat4(1), camera.getPosition());
-	readOBJ_better("gameFiles/Player.obj", "gameFiles/Well.png", nullptr, tempModelMatrix); //cache player model
-
-	/*tempModelMatrix = glm::translate(glm::mat4(1), camera.getPosition());
-	string playerId = "test";
-	Entity* player = readOBJ_better("gameFiles/Player.obj", "gameFiles/Well.png", nullptr, tempModelMatrix);
-	pair<string, Entity*> p = pair<string, Entity*>(playerId, player);
-	renderer->players.insert(p);*/
+	readOBJ_better("gameFiles/Player.obj", "gameFiles/Character.png", nullptr, tempModelMatrix); //cache player model
 
 	//random entities
 	generateEntities("gameFiles/Palm.obj", "gameFiles/Palm.png", 150);
@@ -140,7 +134,6 @@ int main(int argc, char* argv[]) {
 	Uint32 frameStart;
 	int frameTime;
 	bool firstLoop = true;
-	//vector<unsigned int> ids = cache.at("gameFiles/Player.obj");
 	
 	//main loop
 	while (1) {
