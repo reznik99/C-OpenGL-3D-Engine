@@ -15,8 +15,8 @@ out vec3 toLightVector;
 out vec3 toCameraVector;
 out float visibility;
 
-const float density = 0.004;
-const float gradient = 2;
+const float density = 0.002;
+const float gradient = 5;
 
 void main() {
 	//positions
