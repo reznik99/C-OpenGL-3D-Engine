@@ -33,11 +33,11 @@ public:
 	float prevMouseX;
 	float prevMouseY;
 
-	float playerHeight = 2.5;
+	float playerHeight = 8.0f;
 	bool jumped = false;
-	const float GRAVITY = 9.81f / 60.0f / 8.0f;
-	const float JUMP_POWER = 0.4f;
-	const float MAX_SPEED = 0.35f;
+	const float GRAVITY = 9.81f / 60.0f / 7.0f;
+	const float JUMP_POWER = 3.0f;
+	const float MAX_SPEED = 0.5f;
 
 private:
 	glm::vec3 position;
