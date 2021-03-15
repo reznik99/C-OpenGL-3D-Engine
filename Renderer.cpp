@@ -13,7 +13,7 @@ Renderer::Renderer(unsigned int width, unsigned int height) {
 	/*glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);*/
 	
-	cout << "Loading shaders " << endl;
+	cout << "Loading shaders..." << endl;
 	//Entity shaders and program
 	string _vertexShaderSource = readShader("shaders/vertexShaderEntities.glsl");
 	string _fragmentShaderSource = readShader("shaders/fragmentShaderEntities.glsl");

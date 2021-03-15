@@ -42,13 +42,13 @@ void Camera::update(Terrain* terrain) {
 
 	float groundPos = this->playerHeight + terrain->getHeightAt((int)this->position[2], (int)this->position[0]);
 	//collide
-	if (this->position[1] < groundPos) {
+	if (this->position[1] <= groundPos) {
 		this->position[1] = groundPos;
 		this->velocity[1] = 0;
 		this->jumped = false;
 	}
 	else {
-		jumped = true;
+		this->jumped = true;
 	}
 }
 

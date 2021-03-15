@@ -5,6 +5,10 @@
 
 UDPClient::UDPClient(string server, string PORT) {
 	this->connectedStatus = true;
+	if (server == "" || PORT == "") {
+		this->connectedStatus = false;
+		return;
+	}
 
 	// Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -61,17 +65,17 @@ void UDPClient::update(glm::vec3 position, float yaw, Renderer* renderer)
 	// update player
 	if (renderer->players.count(playerId)) {
 		Entity* player = renderer->players.at(playerId);
-		player->modelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y - 2.5f, output.z));
-		player->modelMatrix = glm::rotate(player->modelMatrix, glm::radians(output.w), glm::vec3(0, 1, 0));
+		player->modelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y - 8.0f, output.z));
+		player->modelMatrix = glm::rotate(player->modelMatrix, glm::radians(-output.w + 90), glm::vec3(0, 1, 0));
 	}
 	// create new player entity from cache in loader
 	else {
 		cout << "New Player joined server: " << playerId << endl;
 
 		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y, output.z));
-		tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(output.w), glm::vec3(0, 1, 0));
+		tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(-output.w), glm::vec3(0, 1, 0));
 
-		Entity* newPlayer = readOBJ_better("gameFiles/Player.obj", "gameFiles/Character.jpg", nullptr, tempModelMatrix);
+		Entity* newPlayer = readOBJ_better("gameFiles/Stone.obj", "gameFiles/Stone.png", nullptr, tempModelMatrix);
 		renderer->players.insert(pair<string, Entity*>(playerId, newPlayer));
 
 		cout << "New Player spawned at: " << glm::to_string(output) << endl;
@@ -125,11 +129,11 @@ void UDPClient::calculateRTT() {
 	}
 
 	iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-	string input = string(recvbuf);
+	string input = string(recvbuf, iResult);
 	cout << input ;
-	if (input == "RTT_CHECK") {
+	//if (input == "RTT_CHECK") {
 		milliseconds now = duration_cast<milliseconds>(chrono::system_clock::now().time_since_epoch());
 		long long RTT = now.count() - ms.count();
 		cout << " RTT: " << RTT << "ms" << endl;
-	}
+	//}
 }
