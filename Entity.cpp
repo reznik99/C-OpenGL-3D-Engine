@@ -63,13 +63,13 @@ int Entity::update() {
 // creates a VBO and binds it to current VAO
 unsigned int Entity::storeDataInAttributeList(int attributeNumber, int coordinateSize, std::vector<float>& _data) {
 	unsigned int _bufferId = 0;
+
 	glGenBuffers(1, &_bufferId); //gen vbo
 	glBindBuffer(GL_ARRAY_BUFFER, _bufferId); //bind vbo
 	glBufferData(GL_ARRAY_BUFFER, _data.size() * sizeof(float), &_data[0], GL_STATIC_DRAW); //push data to vbo
+
 	glEnableVertexAttribArray(attributeNumber); //enable it in shader
 	glVertexAttribPointer(attributeNumber, coordinateSize, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	return _bufferId;
 }
