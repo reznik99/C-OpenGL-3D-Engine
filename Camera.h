@@ -1,8 +1,6 @@
 #pragma once
 #include <SDL2\SDL_events.h>
-#include <glm\ext\vector_float3.hpp>
-#include <glm\ext\matrix_float4x4.hpp>
-#include <glm\ext\matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <iostream>
 #include "Terrain.h"
 class Renderer;
@@ -35,13 +33,14 @@ public:
 
 	float playerHeight = 8.0f;
 	bool jumped = false;
-	const float GRAVITY = 9.81f / 60.0f / 7.0f;
+	const float GRAVITY = 9.81f / 60.0f / 5.0f;
 	const float JUMP_POWER = 3.0f;
-	const float MAX_SPEED = 0.5f;
+	const float MAX_SPEED = 1.5f;
 
 private:
 	glm::vec3 position;
 	glm::vec3 velocity;
+	glm::vec3 acceleration;
 	glm::vec3 angles;
 };
 

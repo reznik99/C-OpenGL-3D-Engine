@@ -18,33 +18,39 @@ void Camera::update(Terrain* terrain) {
 	glm::vec3 front = getFront();
 	glm::vec3 right = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
 
-	float speed = 0.01f;
+	glm::vec3 total(0, 0, 0);
+	if (moveForward)
+		total += front;
+	if (moveBackwards)
+		total -= front;
+	if (moveRight)
+		total += right;
+	if (moveLeft)
+		total -= right;
+	this->acceleration.x = total.x;
+	this->acceleration.z = total.z;
 
-	if (!jumped) {
-		glm::vec3 total(0, 0, 0);
-		if (moveForward)
-			total = front * MAX_SPEED;
-		if (moveBackwards)
-			total = front * -MAX_SPEED;
-		if (moveRight)
-			total += right * MAX_SPEED;
-		if (moveLeft)
-			total += right * -MAX_SPEED;
-		this->velocity = total;
+	// Clamp velocity
+	if (abs(this->velocity.x) + abs(this->velocity.z) > this->MAX_SPEED) {
+		this->position += this->velocity;
+		this->velocity.y += this->acceleration.y;
+		this->acceleration.y -= this->GRAVITY;
 	}
-	if (!moveForward && !moveRight && !moveBackwards && !moveLeft && !jumped) {
-		this->velocity[0] = 0;
-		this->velocity[2] = 0;
+	else {
+		this->position += this->velocity;
+		this->velocity += this->acceleration;
+		this->acceleration.y -= this->GRAVITY;
 	}
-
-	this->position += this->velocity;	//move
-	this->velocity[1] -= this->GRAVITY; //fall
+	
+	this->velocity *= 0.85;					// Friction
+	
 
 	float groundPos = this->playerHeight + terrain->getHeightAt((int)this->position[2], (int)this->position[0]);
 	//collide
 	if (this->position[1] <= groundPos) {
 		this->position[1] = groundPos;
 		this->velocity[1] = 0;
+		this->acceleration[1] = 0;
 		this->jumped = false;
 	}
 	else {
