@@ -19,7 +19,7 @@ public:
 
 	float getHeightAt(int x, int z);
 
-	const float mapSize = 600;
+	const float mapSize = 1200;
 	const float MAX_HEIGHT = 100;
 
 	unsigned int VAO = 0;

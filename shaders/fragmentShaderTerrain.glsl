@@ -18,7 +18,7 @@ float ambientLighting = 0.2f;
 float specularStrength = 0.5f;    //Should read from specular map
 float shininess = 16.0f;		
 float tiling = 25.0f;
-vec3 skyColor = vec3(0, 0.4f, 0.7f); //should be uniform
+vec3 skyColor = vec3(0.5f, 0.4f, 0.3f); //should be uniform
 vec3 lightColor = vec3(1f, 0.9f, 0.9f); //should be uniform
 
 void main() {
