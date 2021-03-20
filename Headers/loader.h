@@ -15,10 +15,17 @@
 
 using namespace std;
 
-static unsigned int TextureFromFile(const char* path, const string& directory, bool gamma)
+static unsigned int loadTexture(const char* path);
+unsigned int loadCubeMapTexture(vector<string> textureFiles);
+void genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 modelMatrix, Terrain* newTerrain, bool flat);
+glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT);
+float getHeight(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT);
+
+// SKYBOX
+
+static unsigned int loadTexture(const char* path)
 {
 	string filename = string(path);
-	filename = directory + '/' + filename;
 
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -82,6 +89,8 @@ unsigned int loadCubeMapTexture(vector<string> textureFiles) {
 
 	return textureId;
 }
+
+// TERRAIN
 
 void genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 modelMatrix, Terrain* newTerrain, bool flat) {
 
