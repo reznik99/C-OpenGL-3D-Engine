@@ -40,9 +40,9 @@ void main() {
 	vec4 totalColour = tex1Col + tex2Col + tex3Col + tex4Col;
 
 	//Make tiles shinier than other terrains (This could be loaded from a separate specularMap
-	if(blendMapColour.g > blendMapColour.r && blendMapColour.g > blendMapColour.b){
-		specularStrength = 1.0f;
-	}
+	//if(blendMapColour.g > blendMapColour.r && blendMapColour.g > blendMapColour.b){
+		//specularStrength = 1.0f;
+	//}
 
 	/* Phong lighting (done in WORLD space) */
 	// Ambient
