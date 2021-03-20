@@ -1,36 +1,49 @@
 
-
+// STL
 #include <iostream>
 #include <vector>
 #include <fstream>
 #include <future>
 #include <chrono>
 
+//Math
 #include <glm/glm.hpp>
 #include <SDL2/SDL.h>
+
+// OpenGL extensios
 #include <GL/glew.h>
+
+// Image loading
 #include <STB/stb_image.h>
 
+// Engine
 #include "../Headers/model.h"
 #include "../Headers/camera.h"
 #include "../Headers/loader.h"
 #include "../Headers/entity.h"
 #include "../Headers/skybox.h"
+#include "../Headers/UDPClient.h"
 
 #undef main
 
 // settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
+const int FPS = 60;
+const int frameDelay = 1000 / FPS;
 
-// camera
+// Game
+vector<Entity> entities;
+map<string, Entity*> players;
+string playerName;
+
+// Camera
 Camera camera(glm::vec3(200, 10, 200), glm::vec3(0, 180, 0));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
-const int FPS = 60;
-const int frameDelay = 1000 / FPS;
+
 
 int main(int argc, char** argv)
 {
@@ -67,31 +80,31 @@ int main(int argc, char** argv)
 	Terrain terrain;
 	genTerrain((terrainPath + "heightmap2_scaled.png").c_str(), terrainTextures, terrainModelMatrix, &terrain, false);
 
+	// Set Global illumination
+	glm::vec3 g_light = glm::vec3(25.0f, terrain.mapSize / 2, terrain.mapSize * 2); //sunset position (match skybox)
+
 	// Load Skybox
 	Skybox skybox;
 
 	// Load models
 	printf("Loading Models...\n");
-	vector<Entity> entities;
 
 	Model gs_inn = Model("Models/Goldshirehouse/goldshireinn.obj");
 	glm::mat4 gs_inn_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(200, terrain.getHeightAt(200, 100) - 5.0f, 100));
 	gs_inn_matrix = glm::scale(gs_inn_matrix, glm::vec3(3.5f, 3.5f, 3.5f));
 	gs_inn_matrix = glm::rotate(gs_inn_matrix, glm::radians(-90.0f), glm::vec3(0, 1, 0));
-	entities.push_back(Entity(gs_inn, gs_inn_matrix));
+	entities.push_back(Entity(&gs_inn, gs_inn_matrix));
 
 	Model evelwyn_tree1 = Model("Models/Evelwyn-Tree1/elwynntreecanopy01.obj");
 	glm::mat4 evelwyn_tree1_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(200, terrain.getHeightAt(200, 300) - 1.0f, 300));
 	evelwyn_tree1_matrix = glm::scale(evelwyn_tree1_matrix, glm::vec3(3.5f, 3.5f, 3.5f));
-	entities.push_back(Entity(evelwyn_tree1, evelwyn_tree1_matrix));
+	entities.push_back(Entity(&evelwyn_tree1, evelwyn_tree1_matrix));
 
 
 	Model player1 = Model("Models/Orc/orcmalescale.obj");
 	glm::mat4 player1_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(250, terrain.getHeightAt(250, 250) - 1.0f, 250));
 	player1_matrix = glm::scale(player1_matrix, glm::vec3(7.0f, 7.0f, 7.0f));
-	entities.push_back(Entity(player1, player1_matrix));
-
-	glm::vec3 g_light = glm::vec3(25.0f, terrain.mapSize / 2, terrain.mapSize * 2); //sunset position (match skybox)
+	entities.push_back(Entity(&player1, player1_matrix));
 
 	Uint32 frameStart;
 	int frameTime = 0;

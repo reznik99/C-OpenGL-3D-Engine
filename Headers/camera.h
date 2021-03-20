@@ -2,8 +2,7 @@
 #include <SDL2\SDL_events.h>
 #include <glm/gtx/string_cast.hpp>
 #include <iostream>
-#include "Terrain.h"
-class Renderer;
+#include "terrain.h"
 
 class Camera
 {

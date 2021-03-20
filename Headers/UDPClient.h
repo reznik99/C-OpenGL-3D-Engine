@@ -19,6 +19,9 @@
 #include <chrono>
 using namespace std;
 
+extern map<string, Entity*> players;
+extern Model* playerModel;
+extern string playerName;
 
 #define DEFAULT_BUFLEN 512
 
@@ -60,20 +63,20 @@ public:
 			this->calculateRTT();
 		}
 
-		sendbuf = "CONNECT&0.0&0.0&0.0&0.0&Frank";
-		iResult = sendto(ConnectSocket, sendbuf.data(), sendbuf.size(), 0, (SOCKADDR*)&dest, sizeof(dest));
+		sendbuf = "CONNECT&0.0&0.0&0.0&0.0&" + playerName;
+		iResult = sendto(ConnectSocket, sendbuf.data(), static_cast<int>(sendbuf.size()), 0, (SOCKADDR*)&dest, sizeof(dest));
 		if (iResult == SOCKET_ERROR) {
 			printf("send failed with error: %d\n", WSAGetLastError());
 		}
 	}
 
-	/*void UDPClient::update(glm::vec3 position, float yaw, Renderer* renderer)
+	void update(glm::vec3 position, float yaw)
 	{
 		// Send Player info
 		sendbuf = "UPDATE&" + to_string(position.x) + "&" + to_string(position.y) + "&"
 			+ to_string(position.z) + "&" + to_string(yaw);
 
-		iResult = sendto(ConnectSocket, sendbuf.data(), sendbuf.size(), 0, (SOCKADDR*)&dest, sizeof(dest));
+		iResult = sendto(ConnectSocket, sendbuf.data(), static_cast<int>(sendbuf.size()), 0, (SOCKADDR*)&dest, sizeof(dest));
 		if (iResult == SOCKET_ERROR) {
 			printf("send failed with error: %d\n", WSAGetLastError());
 		}
@@ -85,8 +88,8 @@ public:
 		glm::vec4 output = serializeBuffer(recvbuf, playerId);
 
 		// update player
-		if (renderer->players.count(playerId)) {
-			Entity* player = renderer->players.at(playerId);
+		if (players.count(playerId)) {
+			Entity* player = players.at(playerId);
 			player->modelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y - 8.0f, output.z));
 			player->modelMatrix = glm::rotate(player->modelMatrix, glm::radians(-output.w + 90), glm::vec3(0, 1, 0));
 		}
@@ -97,12 +100,12 @@ public:
 			glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y, output.z));
 			tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(-output.w), glm::vec3(0, 1, 0));
 
-			Entity* newPlayer = readOBJ("gameFiles/Stone.obj", "gameFiles/Stone.png", nullptr, tempModelMatrix);
-			renderer->players.insert(pair<string, Entity*>(playerId, newPlayer));
+			Entity* newPlayer = &Entity(playerModel, tempModelMatrix);
+			players.insert(pair<string, Entity*>(playerId, newPlayer));
 
 			cout << "New Player spawned at: " << glm::to_string(output) << endl;
 		}
-	}*/
+	}
 
 	glm::vec4 serializeBuffer(const char* buffer, string& playerId) {
 		//first 5 values, (id, x, y, z, yaw) for player
@@ -144,7 +147,7 @@ public:
 		sendbuf = "RTT_CHECK";
 
 		//iResult = send(ConnectSocket, sendbuf.data(), sendbuf.size(), 0);
-		iResult = sendto(ConnectSocket, sendbuf.data(), sendbuf.size(), 0, (SOCKADDR*)&dest, sizeof(dest));
+		iResult = sendto(ConnectSocket, sendbuf.data(), static_cast<int>(sendbuf.size()), 0, (SOCKADDR*)&dest, sizeof(dest));
 		if (iResult == SOCKET_ERROR) {
 			printf("Failed RTT datagram send: %d\n", WSAGetLastError());
 		}
