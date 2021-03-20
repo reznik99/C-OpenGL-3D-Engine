@@ -8,7 +8,7 @@ in float visibility;
 
 layout(location = 0) out vec4 outColor;
 
-uniform sampler2D diffuseTex;
+uniform sampler2D texture_diffuse1;
 
 float ambientLighting = 0.2f;
 float specularStrength = 0.5f;    //Should read from specular map
@@ -23,10 +23,10 @@ void main() {
 	vec3 unitVectorToCamera = normalize(toCameraVector);
 
 	//Textures
-	vec4 textureColor = texture2D(diffuseTex, texCoords);
-	if(textureColor.a < 0.5){
-		discard; //fake transparency for grass
-	}
+	vec4 textureColor = texture2D(texture_diffuse1, texCoords);
+	//if(textureColor.a < 0.1){
+		//discard; //fake transparency for grass
+	//}
 
 	/* Phong lighting (done in WORLD space) */
 	// Ambient

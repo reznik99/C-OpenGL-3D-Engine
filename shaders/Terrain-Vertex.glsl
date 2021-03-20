@@ -15,7 +15,7 @@ out vec3 toLightVector;
 out vec3 toCameraVector;
 out float visibility;
 
-const float density = 0.002;
+const float density = 0.0013;
 const float gradient = 5;
 
 void main() {
@@ -29,8 +29,8 @@ void main() {
 	toLightVector = lightPosition - worldPosition.xyz;
 	toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
 	// is equal to -> last row of inverted view matrix is camera position!
-	/*mat4 inverseV = inverse(viewMatrix);
-	toCameraVector = vec3(inverseV[3][0], inverseV[3][1], inverseV[3][2]) - worldPosition.xyz;*/
+	// mat4 inverseV = inverse(viewMatrix);
+	// toCameraVector = vec3(inverseV[3][0], inverseV[3][1], inverseV[3][2]) - worldPosition.xyz;
 
 	//distance fade
 	float distance = length(positionRelativeToCam.xyz);

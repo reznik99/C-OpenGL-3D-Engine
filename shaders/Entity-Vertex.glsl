@@ -5,9 +5,9 @@ uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
 uniform vec3 lightPosition;
 
-in vec3 vertex;
-in vec3 normal;
-in vec2 textureCoords;
+layout (location = 0) in vec3 vertex;
+layout (location = 1) in vec3 normal;
+layout (location = 2) in vec2 textureCoords;
 
 out vec2 texCoords;
 out vec3 surfaceNormal;
@@ -15,7 +15,7 @@ out vec3 toLightVector;
 out vec3 toCameraVector;
 out float visibility;
 
-const float density = 0.002;
+const float density = 0.0013;
 const float gradient = 5;
 
 void main() {
