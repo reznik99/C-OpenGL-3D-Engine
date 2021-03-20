@@ -9,8 +9,8 @@
 > OpenGL was chosen because cross-platform compatibility and a little previous experience with it..<br>
 
 <p float="left" align="center">
-  <img src="readmeSrc/8.PNG" width="45%" />
-  <img src="readmeSrc/7.PNG" width="45%" />
+  <img src="readmeSrc/10.PNG" width="45%" />
+  <img src="readmeSrc/9.PNG" width="45%" />
 </p>
 
 
