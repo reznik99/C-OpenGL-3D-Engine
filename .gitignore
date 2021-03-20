@@ -1,9 +1,12 @@
 #game models
-gameFiles/
+gameFiles/*
+Models/*
 
 #Visual studio stuff
 Debug/*
 Release/*
+x64/*
+
 *vcxproj*
 
 # Prerequisites
