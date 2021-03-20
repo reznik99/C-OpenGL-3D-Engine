@@ -15,6 +15,7 @@
 #include "Loader.h"
 #include "Renderer.h"
 #include "TCPClient.h"
+#include "UDPClient.h"
 
 #undef main
 
@@ -27,9 +28,9 @@ const unsigned int width = 1920, height = 1080;
 const int FPS = 60;
 const int frameDelay = 1000 / FPS;
 
-Renderer* renderer = nullptr;							// Renderer initialized after main()
-Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));	// Players position/view
-glm::vec3 g_light;										// Global illumination
+Renderer* renderer = nullptr;								// Renderer initialized after main()
+Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 180, 0));	// Players position/view
+glm::vec3 g_light;											// Global illumination
 
 
 void loadEntity(const char* filename, const char* textureFile, const char* textureNormalFile, glm::mat4 modelMatrix) {
@@ -43,7 +44,7 @@ void generateEntities(const char* obj, const char* tex, int amount) {
 	for (int i = 0; i < amount; i++) {
 		int x = rand() % (int)terrainSize;
 		int z = rand() % (int)terrainSize;
-		float scale = (rand() % 10) / 10.0f + 0.15f;
+		float scale = (rand() % 10) / 10.0f + 1.5f;
 		glm::mat4 modelMatrix = glm::translate(glm::mat4(1), glm::vec3(x, renderer->getTerrain()->getHeightAt(z, x), z));
 		modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
 		modelMatrix = glm::rotate(modelMatrix, glm::radians((float)(rand() % 360)), glm::vec3(0, 1, 0));
@@ -54,7 +55,7 @@ void generateEntities(const char* obj, const char* tex, int amount) {
 }
 
 void init() {
-	cout << "Generating Terrain.." << endl;
+	cout << "Generating Terrain..." << endl;
 
 	renderer = new Renderer(width, height);
 
@@ -75,25 +76,31 @@ void init() {
 	cout << "Loading game Entities..." << endl;
 	
 	glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrainSize / 3.0f, renderer->getTerrain()->getHeightAt((int)(terrainSize / 3.0f), (int)(terrainSize / 3.0f)), terrainSize / 3.0f));
-	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(0.7f));
+	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(3));
 	loadEntity("gameFiles/House.obj", "gameFiles/House.png", nullptr, tempModelMatrix);
 
-	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(50, renderer->getTerrain()->getHeightAt(50, 50)+1, 50));
-	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(1));
+	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(terrainSize / 2.0f, renderer->getTerrain()->getHeightAt(terrainSize / 2.0f, terrainSize / 3.0f), terrainSize / 3.0f));
+	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(3));
 	loadEntity("gameFiles/moonbrook_inn.obj", "gameFiles/moonbrook_inn.png", nullptr, tempModelMatrix);
+
+
+	tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(275, renderer->getTerrain()->getHeightAt(275, 425) - 1, 425));
+	tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(8));
+	loadEntity("gameFiles/Tower.obj", "gameFiles/Tower.png", nullptr, tempModelMatrix);
+
 	
-	tempModelMatrix = glm::translate(glm::mat4(1), camera.getPosition());
-	readOBJ_better("gameFiles/Player.obj", "gameFiles/Character.jpg", nullptr, tempModelMatrix); //cache player model
+	tempModelMatrix = glm::translate(glm::mat4(1), camera.getPosition() - glm::vec3(0, camera.playerHeight, 0));
+	readOBJ_better("gameFiles/Stone.obj", "gameFiles/Stone.png", nullptr, tempModelMatrix); //cache player model
 
 	// Random entities
-	generateEntities("gameFiles/Palm.obj", "gameFiles/Palm.png", 150);
-	generateEntities("gameFiles/Palm2_low.obj", "gameFiles/Palm2.jpg", 150);
-	generateEntities("gameFiles/grass.obj", "gameFiles/grass.png", 400);
+	generateEntities("gameFiles/Palm.obj", "gameFiles/Palm.png", 2500);
+	generateEntities("gameFiles/Palm2_low.obj", "gameFiles/Palm2.jpg", 2500);
+	generateEntities("gameFiles/grass.obj", "gameFiles/grass.png", 30000);
 }
 
 
 
-void cleanUp(SDL_Window* _window, SDL_GLContext _context, TCPClient* client) {
+void cleanUp(SDL_Window* _window, SDL_GLContext _context, UDPClient* client) {
 	if (client->connectedStatus)
 		client->cleanUp();
 	renderer->cleanUp();
@@ -117,12 +124,13 @@ int main(int argc, char* argv[]) {
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 	// Networking
-	cout << "Enter server url (url:port) ";
+	cout << "Enter server ip (ip/domain:port) ";
 	string url;
 	getline(cin, url);
 	string port = url.substr(url.find(":") + 1, url.size());
 
-	TCPClient* client = new TCPClient(url.substr(0, url.find(":")), port);
+	//TCPClient* client = new TCPClient(url.substr(0, url.find(":")), port);
+	UDPClient* client = new UDPClient(url.substr(0, url.find(":")), port);
 	future<void> tcpPromise;
 
 
@@ -153,7 +161,7 @@ int main(int argc, char* argv[]) {
 		// Update
 		if (client->connectedStatus) {
 			if (firstLoop || tcpPromise.wait_for(chrono::milliseconds(0)) == future_status::ready) {
-				tcpPromise = async(launch::async, &TCPClient::update, client, camera.getPosition(), camera.getAngles().y, renderer);
+				tcpPromise = async(launch::async, &UDPClient::update, client, camera.getPosition(), camera.getAngles().y, renderer);
 				firstLoop = false;
 			}
 		}
