@@ -8,12 +8,12 @@ public:
 	
 
 	Entity(Model* model, glm::mat4 matrix) {
-		this->entityModel = model;
-		this->modelMatrix = matrix;
+		entityModel = model;
+		modelMatrix = matrix;
 	}
 
 	void Draw(Shader& shader) {
-		this->entityModel->Draw(shader);
+		entityModel->Draw(shader);
 	}
 
 	Model* entityModel;			// Pointer to model (shared between many Entities EG. Trees)

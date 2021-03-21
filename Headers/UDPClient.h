@@ -19,11 +19,14 @@
 #include <chrono>
 using namespace std;
 
-extern map<string, Entity*> players;
-extern Model* playerModel;
 extern string playerName;
 
 #define DEFAULT_BUFLEN 512
+
+struct playerInfo {
+	glm::vec4 modelMatrix;
+	string playerId;
+};
 
 class UDPClient
 {
@@ -64,13 +67,14 @@ public:
 		}
 
 		sendbuf = "CONNECT&0.0&0.0&0.0&0.0&" + playerName;
+		cout << "sending: " << sendbuf << endl;
 		iResult = sendto(ConnectSocket, sendbuf.data(), static_cast<int>(sendbuf.size()), 0, (SOCKADDR*)&dest, sizeof(dest));
 		if (iResult == SOCKET_ERROR) {
 			printf("send failed with error: %d\n", WSAGetLastError());
 		}
 	}
 
-	void update(glm::vec3 position, float yaw)
+	playerInfo update(glm::vec3 position, float yaw)
 	{
 		// Send Player info
 		sendbuf = "UPDATE&" + to_string(position.x) + "&" + to_string(position.y) + "&"
@@ -84,34 +88,16 @@ public:
 		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
 		//iResult = recvfrom(ConnectSocket, recvbuf, recvbuflen, 0, reinterpret_cast<SOCKADDR*>(&dest), (int *)sizeof(dest));
 
-		string playerId;
-		glm::vec4 output = serializeBuffer(recvbuf, playerId);
-
-		// update player
-		if (players.count(playerId)) {
-			Entity* player = players.at(playerId);
-			player->modelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y - 8.0f, output.z));
-			player->modelMatrix = glm::rotate(player->modelMatrix, glm::radians(-output.w + 90), glm::vec3(0, 1, 0));
-		}
-		// create new player entity from cache in loader
-		else {
-			cout << "New Player joined server: " << playerId << endl;
-
-			glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(output.x, output.y, output.z));
-			tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(-output.w), glm::vec3(0, 1, 0));
-
-			Entity* newPlayer = &Entity(playerModel, tempModelMatrix);
-			players.insert(pair<string, Entity*>(playerId, newPlayer));
-
-			cout << "New Player spawned at: " << glm::to_string(output) << endl;
-		}
+		playerInfo data = serializeBuffer(recvbuf);
+		
+		return data;
 	}
 
-	glm::vec4 serializeBuffer(const char* buffer, string& playerId) {
+	playerInfo serializeBuffer(const char* buffer) {
 		//first 5 values, (id, x, y, z, yaw) for player
 		string delimiter = "&";
 		string input = string(buffer);
-		playerId = input.substr(0, input.find(delimiter));
+		string playerId = input.substr(0, input.find(delimiter));
 		input.erase(0, input.find(delimiter) + delimiter.length());
 
 		float x = stof(input.substr(0, input.find("&")));
@@ -125,7 +111,12 @@ public:
 
 		float yaw = stof(input.substr(0, input.find("&")));
 
-		return glm::vec4(x, y, z, yaw);
+		playerInfo data{
+			glm::vec4(x, y, z, yaw),
+			playerId
+		};
+
+		return data;
 	}
 
 	void cleanUp()
