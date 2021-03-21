@@ -36,6 +36,7 @@ const int frameDelay = 1000 / FPS;
 vector<Entity> entities;
 map<string, Entity*> players;
 string playerName;
+Model* playerModel;
 
 // Camera
 Camera camera(glm::vec3(200, 10, 200), glm::vec3(0, 180, 0));
@@ -66,15 +67,16 @@ int main(int argc, char** argv)
 
 	// build and compile shaders
 	printf("Loading Shaders...\n");
-	Shader SkyboxShader("Shaders/Skybox-Vertex.glsl", "Shaders/Skybox-Fragment.glsl");
-	Shader TerrainShader("Shaders/Terrain-Vertex.glsl", "Shaders/Terrain-Fragment.glsl");
-	Shader EntityShader("Shaders/Entity-Vertex.glsl", "Shaders/Entity-Fragment.glsl");
+	Shader SkyboxShader("./Engine/Shaders/Skybox-Vertex.glsl", "./Engine/Shaders/Skybox-Fragment.glsl");
+	Shader TerrainShader("./Engine/Shaders/Terrain-Vertex.glsl", "./Engine/Shaders/Terrain-Fragment.glsl");
+	Shader EntityShader("./Engine/Shaders/Entity-Vertex.glsl", "./Engine/Shaders/Entity-Fragment.glsl");
 
 	// Generate terrain
 	printf("Generating Terrain...\n");
-	string terrainPath = "Models/Terrain/";
+	string terrainPath = "./Engine/Models/Terrain/";
 
-	vector<string> terrainTextures{ terrainPath + "Blendmap.png",terrainPath + "Grass.png",terrainPath + "Grass2.png", terrainPath + "Sand.png", terrainPath + "Rock.png" };
+	vector<string> terrainTextures{ terrainPath + "Blendmap.png",terrainPath + "Grass.png",
+		terrainPath + "Grass2.png", terrainPath + "Sand.png", terrainPath + "Rock.png" };
 	glm::mat4 terrainModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -4.0f, 0.0f));
 
 	Terrain terrain;
@@ -84,27 +86,44 @@ int main(int argc, char** argv)
 	glm::vec3 g_light = glm::vec3(25.0f, terrain.mapSize / 2, terrain.mapSize * 2); //sunset position (match skybox)
 
 	// Load Skybox
-	Skybox skybox;
+	string skyboxPath = "./Engine/Models/Skybox/Forest/";
+	vector<string> files = { skyboxPath + "right.jpg", skyboxPath + "left.jpg", skyboxPath + "top.jpg",
+			skyboxPath + "bottom.jpg", skyboxPath + "back.jpg", skyboxPath + "front.jpg" };
+	Skybox skybox(files);
 
 	// Load models
 	printf("Loading Models...\n");
 
-	Model gs_inn = Model("Models/Goldshirehouse/goldshireinn.obj");
+	Model gs_inn = Model("./Engine/Models/Goldshirehouse/goldshireinn.obj");
 	glm::mat4 gs_inn_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(200, terrain.getHeightAt(200, 100) - 5.0f, 100));
 	gs_inn_matrix = glm::scale(gs_inn_matrix, glm::vec3(3.5f, 3.5f, 3.5f));
 	gs_inn_matrix = glm::rotate(gs_inn_matrix, glm::radians(-90.0f), glm::vec3(0, 1, 0));
 	entities.push_back(Entity(&gs_inn, gs_inn_matrix));
 
-	Model evelwyn_tree1 = Model("Models/Evelwyn-Tree1/elwynntreecanopy01.obj");
+	Model evelwyn_tree1 = Model("./Engine/Models/Evelwyn-Tree1/elwynntreecanopy01.obj");
 	glm::mat4 evelwyn_tree1_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(200, terrain.getHeightAt(200, 300) - 1.0f, 300));
 	evelwyn_tree1_matrix = glm::scale(evelwyn_tree1_matrix, glm::vec3(3.5f, 3.5f, 3.5f));
 	entities.push_back(Entity(&evelwyn_tree1, evelwyn_tree1_matrix));
 
-
-	Model player1 = Model("Models/Orc/orcmalescale.obj");
+	//Model modelPlayer = Model("./Engine/Models/Orc/orcmalescale.obj");
+	playerModel = new Model("./Engine/Models/Orc/orcmalescale.obj");
 	glm::mat4 player1_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(250, terrain.getHeightAt(250, 250) - 1.0f, 250));
 	player1_matrix = glm::scale(player1_matrix, glm::vec3(7.0f, 7.0f, 7.0f));
-	entities.push_back(Entity(&player1, player1_matrix));
+	entities.push_back(Entity(playerModel, player1_matrix));
+
+	
+	cout << "Enter server url (url:port) ";
+	string server;
+	getline(cin, server);
+	string port = server.substr(server.find(":") + 1, server.size());
+
+	cout << "Enter your name:";
+	getline(cin, playerName);
+
+	UDPClient* netClient = new UDPClient(server.substr(0, server.find(":")), port);
+	future<playerInfo> udpPromise = std::async(std::launch::async, &UDPClient::update, netClient, camera.getPosition(), camera.getAngles().y);;
+
+	cout << "ConnectedStatus: " << netClient->connectedStatus << endl;
 
 	Uint32 frameStart;
 	int frameTime = 0;
@@ -114,11 +133,42 @@ int main(int argc, char** argv)
 		bool _break = false;
 		frameStart = SDL_GetTicks();
 
-		// Handle user events
+		// User input
 		while (SDL_PollEvent(&_event))
 			if (camera.checkInputs(_event)) _break = true;
 
+		// Update player
 		camera.update(&terrain);
+
+		// Net update
+		if (netClient->connectedStatus) {
+			if (udpPromise.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+				playerInfo data = udpPromise.get();
+				// update player
+				if (players.count(data.playerId)) {
+					Entity* player = players.at(data.playerId);
+					player->modelMatrix = glm::translate(glm::mat4(1), glm::vec3(data.modelMatrix.x, data.modelMatrix.y - camera.playerHeight, data.modelMatrix.z));
+					player->modelMatrix = glm::rotate(player->modelMatrix, glm::radians(-data.modelMatrix.w), glm::vec3(0, 1, 0));
+					player->modelMatrix = glm::scale(player->modelMatrix, glm::vec3(5.0f, 5.0f, 5.0f));
+
+				}
+				// create new player entity from cache in loader
+				else {
+					cout << "New Player joined server: " << data.playerId << endl;
+
+					glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(data.modelMatrix.x, data.modelMatrix.y - camera.playerHeight, data.modelMatrix.z));
+					tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(-data.modelMatrix.w), glm::vec3(0, 1, 0));
+					tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(5.0f, 5.0f, 5.0f));
+
+
+					Entity* newPlayer = new Entity(playerModel, tempModelMatrix);
+					players.insert(pair<string, Entity*>(data.playerId, newPlayer));
+
+					cout << "New Player spawned at: " << glm::to_string(data.modelMatrix) << endl;
+				}
+				udpPromise = std::async(std::launch::async, &UDPClient::update, netClient, camera.getPosition(), camera.getAngles().y);
+			}
+		}
 
 		// render
 		glClearColor(0.5f, 0.4f, 0.4f, 1.0f);
@@ -156,6 +206,12 @@ int main(int argc, char** argv)
 		for (Entity& e : entities) {
 			EntityShader.setMat4("modelMatrix", e.modelMatrix);
 			e.Draw(EntityShader);
+		}
+
+		for (const auto pair : players) {
+			Entity* player = pair.second;
+			EntityShader.setMat4("modelMatrix", player->modelMatrix);
+			player->Draw(EntityShader);
 		}
 
 
