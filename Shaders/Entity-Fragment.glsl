@@ -24,7 +24,7 @@ void main() {
 
 	//Textures
 	vec4 textureColor = texture2D(texture_diffuse1, texCoords);
-	//if(textureColor.a < 0.1){
+	//if(textureColor.a <= 0.05){
 		//discard; //fake transparency for grass
 	//}
 
