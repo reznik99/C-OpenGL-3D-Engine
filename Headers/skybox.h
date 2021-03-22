@@ -14,7 +14,7 @@ class Skybox
 {
 public:
 
-	Skybox() {
+	Skybox(vector<string> textures) {
 
 		// create buffers/arrays
 		glGenBuffers(1, &this->skyboxVBO);
@@ -31,9 +31,7 @@ public:
 		glBindVertexArray(0);
 
 		// Load Cube map textures
-		vector<string> files = { path + "right.jpg", path + "left.jpg", path + "top.jpg",
-			path + "bottom.jpg", path + "back.jpg", path + "front.jpg" };
-		this->cubeMapTextureId = loadCubeMapTexture(files);
+		this->cubeMapTextureId = loadCubeMapTexture(textures);
 	}
 
 	void Draw(Shader& shader, Camera camera, int frameStart) {

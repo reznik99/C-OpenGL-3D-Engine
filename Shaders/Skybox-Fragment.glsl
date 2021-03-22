@@ -7,7 +7,7 @@ uniform samplerCube cubeMap;
 uniform bool fadeHorizon;
 
 const float lowerLimit = 0.0f;
-const float upperLimit = 30.0f;
+const float upperLimit = 20.0f;
 
 vec3 skyColor = vec3(0.5f, 0.4f, 0.3f); // SHOULD BE UNIFORM
 
