@@ -110,8 +110,8 @@ public:
 		return answer;
 	}
 
-	const float mapSize = 1800;
-	const float MAX_HEIGHT = 300;
+	const float mapSize = 2600;
+	const float MAX_HEIGHT = 200;
 
 	unsigned int VAO = 0;
 	std::vector<unsigned int> VBOs = std::vector<unsigned int>{};

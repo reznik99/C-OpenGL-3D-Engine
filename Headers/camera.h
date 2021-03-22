@@ -152,12 +152,12 @@ public:
 
 
 	// world
-	const float GRAVITY = 9.81f / 60.0f / 12.0f;
+	const float GRAVITY = 9.81f / 60.0f / 27.0f;
 
 	// player
-	const float JUMP_POWER = 4.0f;
-	const float MAX_SPEED = 2.0f;
-	const float playerHeight = 9.0f;
+	const float JUMP_POWER = 2.0f;
+	const float MAX_SPEED = 1.2f;
+	const float playerHeight = 10.0f;
 
 	// Camera
 	const float FOV = 75.0f;

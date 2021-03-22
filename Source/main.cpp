@@ -45,6 +45,20 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
 
+void generateEntities(Model* model, Terrain* terrain, int amount) {
+	float terrainSize = terrain->mapSize;
+	for (int i = 0; i < amount; i++) {
+		int x = rand() % (int)terrainSize;
+		int z = rand() % (int)terrainSize;
+		float scale = (rand() % 10) / 5.0f + 10.0f;
+		glm::mat4 modelMatrix = glm::translate(glm::mat4(1), glm::vec3(x, terrain->getHeightAt(z, x), z));
+		modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
+		modelMatrix = glm::rotate(modelMatrix, glm::radians((float)(rand() % 360)), glm::vec3(0, 1, 0));
+		modelMatrix = glm::rotate(modelMatrix, glm::radians((float)(rand() % 25)), glm::vec3(1, 0, 0));
+		modelMatrix = glm::rotate(modelMatrix, glm::radians((float)(rand() % 25)), glm::vec3(0, 0, 1));
+		entities.push_back(Entity(model, modelMatrix));
+	}
+}
 
 int main(int argc, char** argv)
 {
@@ -64,6 +78,8 @@ int main(int argc, char** argv)
 
 	// configure global opengl state
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// build and compile shaders
 	printf("Loading Shaders...\n");
@@ -80,37 +96,38 @@ int main(int argc, char** argv)
 	glm::mat4 terrainModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -4.0f, 0.0f));
 
 	Terrain terrain;
-	genTerrain((terrainPath + "heightmap2_scaled.png").c_str(), terrainTextures, terrainModelMatrix, &terrain, false);
+	genTerrain((terrainPath + "smol_heightmap.png").c_str(), terrainTextures, terrainModelMatrix, &terrain, false);
 
 	// Set Global illumination
-	glm::vec3 g_light = glm::vec3(25.0f, terrain.mapSize / 2, terrain.mapSize * 2); //sunset position (match skybox)
+	glm::vec3 g_light = glm::vec3(25.0f, terrain.mapSize * 4, terrain.mapSize * 2); //sunset position (match skybox)
 
 	// Load Skybox
-	string skyboxPath = "./Engine/Models/Skybox/Forest/";
-	vector<string> files = { skyboxPath + "right.jpg", skyboxPath + "left.jpg", skyboxPath + "top.jpg",
-			skyboxPath + "bottom.jpg", skyboxPath + "back.jpg", skyboxPath + "front.jpg" };
+	string skyboxPath = "./Engine/Models/Skybox/Day/";
+	vector<string> files = { skyboxPath + "right.png", skyboxPath + "left.png", skyboxPath + "top.png",
+			skyboxPath + "bottom.png", skyboxPath + "back.png", skyboxPath + "front.png" };
 	Skybox skybox(files);
 
 	// Load models
 	printf("Loading Models...\n");
-
 	Model gs_inn = Model("./Engine/Models/Goldshirehouse/goldshireinn.obj");
+	Model tree1 = Model("./Engine/Models/Tree/Tree.obj");
+	Model tree2 = Model("./Engine/Models/Palm/Palm.obj");
+	playerModel = new Model("./Engine/Models/Orc/orcmalescale.obj");
+
+	// Placing Entities
+	printf("Loading map...\n");
 	glm::mat4 gs_inn_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(200, terrain.getHeightAt(200, 100) - 5.0f, 100));
 	gs_inn_matrix = glm::scale(gs_inn_matrix, glm::vec3(3.5f, 3.5f, 3.5f));
 	gs_inn_matrix = glm::rotate(gs_inn_matrix, glm::radians(-90.0f), glm::vec3(0, 1, 0));
 	entities.push_back(Entity(&gs_inn, gs_inn_matrix));
 
-	Model evelwyn_tree1 = Model("./Engine/Models/Evelwyn-Tree1/elwynntreecanopy01.obj");
-	glm::mat4 evelwyn_tree1_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(200, terrain.getHeightAt(200, 300) - 1.0f, 300));
-	evelwyn_tree1_matrix = glm::scale(evelwyn_tree1_matrix, glm::vec3(3.5f, 3.5f, 3.5f));
-	entities.push_back(Entity(&evelwyn_tree1, evelwyn_tree1_matrix));
+	
+	glm::mat4 npc1_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(250, terrain.getHeightAt(250, 250) - 1.0f, 250));
+	npc1_matrix = glm::scale(npc1_matrix, glm::vec3(7.0f, 7.0f, 7.0f));
+	entities.push_back(Entity(playerModel, npc1_matrix));
 
-	//Model modelPlayer = Model("./Engine/Models/Orc/orcmalescale.obj");
-	playerModel = new Model("./Engine/Models/Orc/orcmalescale.obj");
-	glm::mat4 player1_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(250, terrain.getHeightAt(250, 250) - 1.0f, 250));
-	player1_matrix = glm::scale(player1_matrix, glm::vec3(7.0f, 7.0f, 7.0f));
-	entities.push_back(Entity(playerModel, player1_matrix));
-
+	generateEntities(&tree1, &terrain, 350);
+	generateEntities(&tree2, &terrain, 350);
 	
 	cout << "Enter server url (url:port) ";
 	string server;
@@ -120,10 +137,10 @@ int main(int argc, char** argv)
 	cout << "Enter your name:";
 	getline(cin, playerName);
 
-	UDPClient* netClient = new UDPClient(server.substr(0, server.find(":")), port);
+	UDPClient netClient(server.substr(0, server.find(":")), port);
 	future<playerInfo> udpPromise = std::async(std::launch::async, &UDPClient::update, netClient, camera.getPosition(), camera.getAngles().y);;
 
-	cout << "ConnectedStatus: " << netClient->connectedStatus << endl;
+	cout << "ConnectedStatus: " << netClient.connectedStatus << endl;
 
 	Uint32 frameStart;
 	int frameTime = 0;
@@ -141,7 +158,7 @@ int main(int argc, char** argv)
 		camera.update(&terrain);
 
 		// Net update
-		if (netClient->connectedStatus) {
+		if (netClient.connectedStatus) {
 			if (udpPromise.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
 				playerInfo data = udpPromise.get();
 				// update player
@@ -182,7 +199,7 @@ int main(int argc, char** argv)
 		glDepthMask(GL_FALSE);
 		SkyboxShader.use();
 		SkyboxShader.setMat4("projMatrix", projection);
-		SkyboxShader.setBool("fadeHorizon", false);
+		SkyboxShader.setBool("fadeHorizon", true);
 
 		skybox.Draw(SkyboxShader, camera, SDL_GetTicks() - frameTime);
 		glDepthMask(GL_TRUE);
