@@ -32,9 +32,9 @@ class UDPClient
 {
 public:
 	UDPClient(string server, string PORT) {
-		this->connectedStatus = true;
+		connectedStatus = true;
 		if (server == "" || PORT == "") {
-			this->connectedStatus = false;
+			connectedStatus = false;
 			return;
 		}
 
@@ -56,14 +56,15 @@ public:
 
 		// Set up the dest structure with the IP address of
 		// the receiver and the specified port number.
+		dest = sockaddr_in();
 		dest.sin_family = AF_INET;
-		dest.sin_port = htons(9998);
+		dest.sin_port = htons(atoi(PORT.c_str()));
 		inet_pton(AF_INET, server.c_str(), &dest.sin_addr.s_addr); // (might not work with hostnames?)
 
 
 		// Ping Check (RTT)
-		if (this->connectedStatus) {
-			this->calculateRTT();
+		if (connectedStatus) {
+			calculateRTT();
 		}
 
 		sendbuf = "CONNECT&0.0&0.0&0.0&0.0&" + playerName;
