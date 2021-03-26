@@ -37,12 +37,14 @@ vector<Entity> entities;
 map<string, Entity*> players;
 string playerName;
 Model* playerModel;
+glm::vec3 g_light = glm::vec3(250.0f, 1000.0f, 250.0f);
 
 // Camera
 Camera camera(glm::vec3(200, 100, 200), glm::vec3(0, 180, 0));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
+
 
 // Generates n entities randomly on the map
 void generateEntities(Model* model, Terrain* terrain, int amount, float minScale) {
@@ -60,14 +62,36 @@ void generateEntities(Model* model, Terrain* terrain, int amount, float minScale
 	}
 }
 
-int main(int argc, char** argv)
-{
-	// SDL
-	SDL_Window* _window = SDL_CreateWindow("OpenGL Engine",
-		600, 50, SCR_WIDTH, SCR_HEIGHT, SDL_WINDOW_OPENGL);
-	SDL_GLContext _context = SDL_GL_CreateContext(_window);
-	SDL_Event _event;
 
+// Creates new and updates existing players entities
+void updatePlayers(playerInfo data) {
+	// update player
+	if (players.count(data.playerId)) {
+		Entity* player = players.at(data.playerId);
+		player->modelMatrix = glm::translate(glm::mat4(1), glm::vec3(data.modelMatrix.x, data.modelMatrix.y - camera.playerHeight, data.modelMatrix.z));
+		player->modelMatrix = glm::rotate(player->modelMatrix, glm::radians(-data.modelMatrix.w), glm::vec3(0, 1, 0));
+		player->modelMatrix = glm::scale(player->modelMatrix, glm::vec3(5.0f, 5.0f, 5.0f));
+
+	}
+	// create new player entity from cache in loader
+	else {
+		cout << "New Player joined server: " << data.playerId << endl;
+
+		glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(data.modelMatrix.x, data.modelMatrix.y - camera.playerHeight, data.modelMatrix.z));
+		tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(-data.modelMatrix.w), glm::vec3(0, 1, 0));
+		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(5.0f, 5.0f, 5.0f));
+
+
+		Entity* newPlayer = new Entity(playerModel, tempModelMatrix);
+		players.insert(pair<string, Entity*>(data.playerId, newPlayer));
+
+		cout << "New Player spawned at: " << glm::to_string(data.modelMatrix) << endl;
+	}
+}
+
+
+// Initialises glew and set's SDL and OpenGL attributes
+void init() {
 	// Init
 	glewInit();
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
@@ -79,9 +103,22 @@ int main(int argc, char** argv)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_MULTISAMPLE);
 
-	// alpha
+	// Alpha
 	//glEnable(GL_BLEND);
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+
+
+int main(int argc, char** argv)
+{
+	// SDL
+	SDL_Window* _window = SDL_CreateWindow("OpenGL Engine",
+		600, 50, SCR_WIDTH, SCR_HEIGHT, SDL_WINDOW_OPENGL);
+	SDL_GLContext _context = SDL_GL_CreateContext(_window);
+	SDL_Event _event;
+
+	init();
 
 	// Build and compile shaders
 	printf("Loading Shaders...");
@@ -89,6 +126,7 @@ int main(int argc, char** argv)
 	Shader TerrainShader("./Engine/Shaders/Terrain-Vertex.glsl", "./Engine/Shaders/Terrain-Fragment.glsl");
 	Shader EntityShader("./Engine/Shaders/Entity-Vertex.glsl", "./Engine/Shaders/Entity-Fragment.glsl");
 	printf("Done.\n");
+
 
 	// Generate terrain
 	printf("Generating World...");
@@ -100,15 +138,14 @@ int main(int argc, char** argv)
 
 	Terrain terrain;
 	genTerrain((terrainPath + "smol_heightmap.png").c_str(), terrainTextures, terrainModelMatrix, &terrain, false);
-	// Set Global illumination
-	glm::vec3 g_light = glm::vec3(250.0f, 1000.0f, 250.0f); //sunset position (match skybox)
-
+	
 	// Load Skybox
 	string skyboxPath = "./Engine/Models/Skybox/Day/";
 	vector<string> files = { skyboxPath + "right.png", skyboxPath + "left.png", skyboxPath + "top.png",
 			skyboxPath + "bottom.png", skyboxPath + "back.png", skyboxPath + "front.png" };
 	Skybox skybox(files);
 	printf("Done.\n");
+
 
 	// Load models
 	printf("Loading Models...");
@@ -136,18 +173,21 @@ int main(int argc, char** argv)
 	generateEntities(&grass, &terrain, 500, 3.0f);
 	printf("Done.\n");
 
-	cout << "Enter server url (url:port) ";
+	// Network
 	string server;
+	cout << "Enter server url (url:port) ";
 	getline(cin, server);
-	string port = server.substr(server.find(":") + 1, server.size());
-
 	cout << "Enter your name:";
 	getline(cin, playerName);
 
-	UDPClient netClient(server.substr(0, server.find(":")), port);
-	future<playerInfo> udpPromise = std::async(std::launch::async, &UDPClient::update, netClient, camera.getPosition(), camera.getAngles().y);;
-
-	cout << "ConnectedStatus: " << netClient.connectedStatus << endl;
+	size_t idx = server.find(":");
+	string port = server.substr(idx + 1, server.size());
+	UDPClient netClient(server.substr(0, idx), port);
+	if (netClient.connectedStatus) {
+		cout << "ConnectedStatus: " << netClient.connectedStatus << endl;
+		future<playerInfo> udpPromise = std::async(std::launch::async, &UDPClient::update, netClient, camera.getPosition(), camera.getAngles().y);
+	}
+	
 
 	Uint32 frameStart;
 	int frameTime = 0;
@@ -168,28 +208,7 @@ int main(int argc, char** argv)
 		if (netClient.connectedStatus) {
 			if (udpPromise.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
 				playerInfo data = udpPromise.get();
-				// update player
-				if (players.count(data.playerId)) {
-					Entity* player = players.at(data.playerId);
-					player->modelMatrix = glm::translate(glm::mat4(1), glm::vec3(data.modelMatrix.x, data.modelMatrix.y - camera.playerHeight, data.modelMatrix.z));
-					player->modelMatrix = glm::rotate(player->modelMatrix, glm::radians(-data.modelMatrix.w), glm::vec3(0, 1, 0));
-					player->modelMatrix = glm::scale(player->modelMatrix, glm::vec3(5.0f, 5.0f, 5.0f));
-
-				}
-				// create new player entity from cache in loader
-				else {
-					cout << "New Player joined server: " << data.playerId << endl;
-
-					glm::mat4 tempModelMatrix = glm::translate(glm::mat4(1), glm::vec3(data.modelMatrix.x, data.modelMatrix.y - camera.playerHeight, data.modelMatrix.z));
-					tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(-data.modelMatrix.w), glm::vec3(0, 1, 0));
-					tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(5.0f, 5.0f, 5.0f));
-
-
-					Entity* newPlayer = new Entity(playerModel, tempModelMatrix);
-					players.insert(pair<string, Entity*>(data.playerId, newPlayer));
-
-					cout << "New Player spawned at: " << glm::to_string(data.modelMatrix) << endl;
-				}
+				updatePlayers(data);
 				udpPromise = std::async(std::launch::async, &UDPClient::update, netClient, camera.getPosition(), camera.getAngles().y);
 			}
 		}
@@ -198,7 +217,7 @@ int main(int argc, char** argv)
 		glClearColor(0.5f, 0.4f, 0.4f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// view/projection transformations
+		// View/Projection transformations
 		glm::mat4 projection = glm::perspective(glm::radians(camera.FOV), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 2500.0f);
 		glm::mat4 view = camera.getViewMatrix();
 
@@ -251,10 +270,14 @@ int main(int argc, char** argv)
 		if (_break) break;
 	}
 
+	cleanUp(_window, _context);
+
+	return 0;
+}
+
+void cleanUp(SDL_Window* _window, SDL_GLContext _context) {
 	// Close window
 	SDL_Quit();
 	SDL_DestroyWindow(_window);
 	SDL_GL_DeleteContext(_context);
-
-	return 0;
 }
