@@ -39,19 +39,19 @@ string playerName;
 Model* playerModel;
 
 // Camera
-Camera camera(glm::vec3(200, 10, 200), glm::vec3(0, 180, 0));
+Camera camera(glm::vec3(200, 100, 200), glm::vec3(0, 180, 0));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
-
-void generateEntities(Model* model, Terrain* terrain, int amount) {
+// Generates n entities randomly on the map
+void generateEntities(Model* model, Terrain* terrain, int amount, float minScale) {
 	float terrainSize = terrain->mapSize;
 	for (int i = 0; i < amount; i++) {
 		int x = rand() % (int)terrainSize;
 		int z = rand() % (int)terrainSize;
-		float scale = (rand() % 10) / 5.0f + 10.0f;
-		glm::mat4 modelMatrix = glm::translate(glm::mat4(1), glm::vec3(x, terrain->getHeightAt(z, x), z));
+		float scale = (rand() % 10) / 5.0f + minScale;
+		glm::mat4 modelMatrix = glm::translate(glm::mat4(1), glm::vec3(x, terrain->getHeightAt(z, x) - 3.0f, z));
 		modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
 		modelMatrix = glm::rotate(modelMatrix, glm::radians((float)(rand() % 360)), glm::vec3(0, 1, 0));
 		modelMatrix = glm::rotate(modelMatrix, glm::radians((float)(rand() % 25)), glm::vec3(1, 0, 0));
@@ -71,24 +71,27 @@ int main(int argc, char** argv)
 	// Init
 	glewInit();
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
 
-	// tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
 	//stbi_set_flip_vertically_on_load(true);
 
-	// configure global opengl state
+	// Depth test and msaa
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_MULTISAMPLE);
 
-	// build and compile shaders
-	printf("Loading Shaders...\n");
+	// alpha
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Build and compile shaders
+	printf("Loading Shaders...");
 	Shader SkyboxShader("./Engine/Shaders/Skybox-Vertex.glsl", "./Engine/Shaders/Skybox-Fragment.glsl");
 	Shader TerrainShader("./Engine/Shaders/Terrain-Vertex.glsl", "./Engine/Shaders/Terrain-Fragment.glsl");
 	Shader EntityShader("./Engine/Shaders/Entity-Vertex.glsl", "./Engine/Shaders/Entity-Fragment.glsl");
+	printf("Done.\n");
 
 	// Generate terrain
-	printf("Generating Terrain...\n");
+	printf("Generating World...");
 	string terrainPath = "./Engine/Models/Terrain/";
 
 	vector<string> terrainTextures{ terrainPath + "Blendmap.png",terrainPath + "Grass.png",
@@ -97,38 +100,42 @@ int main(int argc, char** argv)
 
 	Terrain terrain;
 	genTerrain((terrainPath + "smol_heightmap.png").c_str(), terrainTextures, terrainModelMatrix, &terrain, false);
-
 	// Set Global illumination
-	glm::vec3 g_light = glm::vec3(25.0f, terrain.mapSize * 4, terrain.mapSize * 2); //sunset position (match skybox)
+	glm::vec3 g_light = glm::vec3(250.0f, 1000.0f, 250.0f); //sunset position (match skybox)
 
 	// Load Skybox
 	string skyboxPath = "./Engine/Models/Skybox/Day/";
 	vector<string> files = { skyboxPath + "right.png", skyboxPath + "left.png", skyboxPath + "top.png",
 			skyboxPath + "bottom.png", skyboxPath + "back.png", skyboxPath + "front.png" };
 	Skybox skybox(files);
+	printf("Done.\n");
 
 	// Load models
-	printf("Loading Models...\n");
+	printf("Loading Models...");
 	Model gs_inn = Model("./Engine/Models/Goldshirehouse/goldshireinn.obj");
 	Model tree1 = Model("./Engine/Models/Tree/Tree.obj");
-	Model tree2 = Model("./Engine/Models/Palm/Palm.obj");
+	Model tree2 = Model("./Engine/Models/Palm/10446_Palm_Tree_v1_max2010_iteration-2-small.obj");
+	Model grass = Model("./Engine/Models/Grass/grass.obj");
 	playerModel = new Model("./Engine/Models/Orc/orcmalescale.obj");
+	printf("Done.\n");
 
 	// Placing Entities
-	printf("Loading map...\n");
-	glm::mat4 gs_inn_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(200, terrain.getHeightAt(200, 100) - 5.0f, 100));
+	printf("Loading map...");
+	glm::mat4 gs_inn_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(200, terrain.getHeightAt(200, 100) - 4.0f, 100));
 	gs_inn_matrix = glm::scale(gs_inn_matrix, glm::vec3(3.5f, 3.5f, 3.5f));
 	gs_inn_matrix = glm::rotate(gs_inn_matrix, glm::radians(-90.0f), glm::vec3(0, 1, 0));
 	entities.push_back(Entity(&gs_inn, gs_inn_matrix));
 
 	
-	glm::mat4 npc1_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(250, terrain.getHeightAt(250, 250) - 1.0f, 250));
+	glm::mat4 npc1_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(250, terrain.getHeightAt(250, 250) - 2.0f, 250));
 	npc1_matrix = glm::scale(npc1_matrix, glm::vec3(7.0f, 7.0f, 7.0f));
 	entities.push_back(Entity(playerModel, npc1_matrix));
 
-	generateEntities(&tree1, &terrain, 350);
-	generateEntities(&tree2, &terrain, 350);
-	
+	generateEntities(&tree1, &terrain, 350, 15.0f);
+	generateEntities(&tree2, &terrain, 50, 5.0f);
+	generateEntities(&grass, &terrain, 500, 3.0f);
+	printf("Done.\n");
+
 	cout << "Enter server url (url:port) ";
 	string server;
 	getline(cin, server);
