@@ -37,12 +37,11 @@ public:
 	vector<Texture> textures_loaded;
 	vector<Mesh>    meshes;
 	string directory;
-	bool gammaCorrection;
 
 	Model() {}
 
 	// constructor, expects a filepath to a 3D model.
-	Model(string const& path, bool gamma = false) : gammaCorrection(gamma)
+	Model(string const& path)
 	{
 		loadModel(path);
 	}
@@ -203,7 +202,7 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 	unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
 	if (data)
 	{
-		GLenum format;
+		GLenum format = GL_RED;
 		if (nrComponents == 1)
 			format = GL_RED;
 		else if (nrComponents == 3)

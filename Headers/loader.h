@@ -34,7 +34,7 @@ static unsigned int loadTexture(const char* path)
 	unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
 	if (data)
 	{
-		GLenum format;
+		GLenum format = GL_RED;
 		if (nrComponents == 1)
 			format = GL_RED;
 		else if (nrComponents == 3)
@@ -100,7 +100,7 @@ void genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 mo
 	if (!data)
 		cout << "Failed to load Heightmap!" << endl;
 
-	int VERTEX_COUNT = height; //assuming square image
+	__int64 VERTEX_COUNT = static_cast<__int64>(height); //assuming square image
 	float MAX_PIXEL_COLOUR = 256 * 256 * 256;
 
 	//generate vertices, normals uvs
@@ -111,7 +111,7 @@ void genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 mo
 	vector<vector<float>> heights;
 	heights.resize(VERTEX_COUNT, vector<float>(VERTEX_COUNT, 0));
 
-	int vertexPointer = 0;
+	__int64 vertexPointer = 0;
 	for (int i = 0; i < VERTEX_COUNT; i++) {
 		for (int j = 0; j < VERTEX_COUNT; j++) {
 			//vertices
@@ -137,9 +137,9 @@ void genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 mo
 	int pointer = 0;
 	for (int gz = 0; gz < VERTEX_COUNT - 1; gz++) {
 		for (int gx = 0; gx < VERTEX_COUNT - 1; gx++) {
-			int topLeft = (gz * VERTEX_COUNT) + gx;
+			int topLeft = (gz * static_cast<int>(VERTEX_COUNT)) + gx;
 			int topRight = topLeft + 1;
-			int bottomLeft = ((gz + 1) * VERTEX_COUNT) + gx;
+			int bottomLeft = ((gz + 1) * static_cast<int>(VERTEX_COUNT)) + gx;
 			int bottomRight = bottomLeft + 1;
 			indices[pointer++] = topLeft;
 			indices[pointer++] = bottomLeft;
@@ -173,7 +173,7 @@ glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, in
 float getHeight(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT) {
 	if (i < 0 || i >= height || j < 0 || j >= height) return NULL;
 
-	unsigned char* pixelOffset = heightMap + (i * height + j);// *nrChannels;
+	unsigned char* pixelOffset = &heightMap[i * height + j];// *nrChannels;
 	unsigned char r = pixelOffset[0];
 	unsigned char g = pixelOffset[1];
 	unsigned char b = pixelOffset[2];

@@ -88,8 +88,8 @@ public:
 	float getHeightAt(int x, int z) {
 
 		float gridSquareSize = mapSize / (heights.size() - 1);
-		unsigned int gridX = (int)floor(x / gridSquareSize);
-		unsigned int gridZ = (int)floor(z / gridSquareSize);
+		unsigned __int64 gridX = (int)floor(x / gridSquareSize);
+		unsigned __int64 gridZ = (int)floor(z / gridSquareSize);
 		if (gridX < 0 || gridZ < 0 || gridX >= heights.size() - 1 || gridZ >= heights.size() - 1)
 			return NULL;
 
@@ -113,15 +113,14 @@ public:
 	const float mapSize = 2600;
 	const float MAX_HEIGHT = 200;
 
+private:
+	glm::mat4 modelMatrix; //position, rotation and scale of entity
+	std::vector<std::vector<float>> heights = std::vector<std::vector<float>>{};
+
 	unsigned int VAO = 0;
 	std::vector<unsigned int> VBOs = std::vector<unsigned int>{};
 
 	std::vector<int> textureIds = std::vector<int>{};
 	unsigned int indexBufferSize = 0;
-
-	glm::mat4 modelMatrix; //position, rotation and scale of entity
-
-private:
-	std::vector<std::vector<float>> heights = std::vector<std::vector<float>>{};
 };
 
