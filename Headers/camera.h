@@ -35,34 +35,34 @@ public:
 			total += right;
 		if (moveLeft)
 			total -= right;
-		this->acceleration.x = total.x;
-		this->acceleration.z = total.z;
+		acceleration.x = total.x;
+		acceleration.z = total.z;
 
 		// Clamp velocity
-		if (abs(this->velocity.x) + abs(this->velocity.z) > this->MAX_SPEED) {
-			this->position += this->velocity;
-			this->velocity.y += this->acceleration.y;
-			this->acceleration.y -= this->GRAVITY;
+		if (abs(velocity.x) + abs(velocity.z) > MAX_SPEED) {
+			position += velocity;
+			velocity.y += acceleration.y;
+			acceleration.y -= GRAVITY;
 		}
 		else {
-			this->position += this->velocity;
-			this->velocity += this->acceleration;
-			this->acceleration.y -= this->GRAVITY;
+			position += velocity;
+			velocity += acceleration;
+			acceleration.y -= GRAVITY;
 		}
 
-		this->velocity *= 0.85;					// Friction
+		velocity *= 0.85;					// Friction
 
 		if (terrain == NULL) return;
-		float groundPos = this->playerHeight + terrain->getHeightAt((int)this->position[2], (int)this->position[0]);
+		float groundPos = playerHeight + terrain->getHeightAt((int)position[2], (int)position[0]);
 		//collide
-		if (this->position[1] <= groundPos) {
-			this->position[1] = groundPos;
-			this->velocity[1] = 0;
-			this->acceleration[1] = 0;
-			this->jumped = false;
+		if (position[1] <= groundPos) {
+			position[1] = groundPos;
+			velocity[1] = 0;
+			acceleration[1] = 0;
+			jumped = false;
 		}
 		else {
-			this->jumped = true;
+			jumped = true;
 		}
 	}
 
