@@ -17,7 +17,7 @@ using namespace std;
 
 static unsigned int loadTexture(const char* path);
 unsigned int loadCubeMapTexture(vector<string> textureFiles);
-void genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 modelMatrix, Terrain* newTerrain, bool flat);
+Terrain genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 modelMatrix, bool flat);
 glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT);
 float getHeight(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT);
 
@@ -92,8 +92,9 @@ unsigned int loadCubeMapTexture(vector<string> textureFiles) {
 
 // TERRAIN
 
-void genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 modelMatrix, Terrain* newTerrain, bool flat) {
+Terrain genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 modelMatrix, bool flat) {
 
+	Terrain newTerrain;
 	//read heightMapFile
 	int width, height, nrChannels;
 	unsigned char* data = stbi_load(heightMapFile, &width, &height, &nrChannels, STBI_grey);
@@ -115,14 +116,14 @@ void genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 mo
 	for (int i = 0; i < VERTEX_COUNT; i++) {
 		for (int j = 0; j < VERTEX_COUNT; j++) {
 			//vertices
-			float vertHeight = getHeight(i, j, data, height, nrChannels, newTerrain->MAX_HEIGHT);
+			float vertHeight = getHeight(i, j, data, height, nrChannels, newTerrain.MAX_HEIGHT);
 			heights[i][j] = flat ? 0 : vertHeight; //add height to collision buffer
-			vertices[vertexPointer * 3] = (float)j / ((float)VERTEX_COUNT - 1) * newTerrain->mapSize;
+			vertices[vertexPointer * 3] = (float)j / ((float)VERTEX_COUNT - 1) * newTerrain.mapSize;
 			vertices[vertexPointer * 3 + 1] = flat ? 0 : vertHeight;
-			vertices[vertexPointer * 3 + 2] = (float)i / ((float)VERTEX_COUNT - 1) * newTerrain->mapSize;
+			vertices[vertexPointer * 3 + 2] = (float)i / ((float)VERTEX_COUNT - 1) * newTerrain.mapSize;
 			//normals
 			glm::vec3 normal = glm::vec3(0, 1, 0);//calculateNormal(j, i, image);
-			normal = flat ? glm::vec3(0, 1, 0) : calculateNormal(i, j, data, height, nrChannels, newTerrain->MAX_HEIGHT);
+			normal = flat ? glm::vec3(0, 1, 0) : calculateNormal(i, j, data, height, nrChannels, newTerrain.MAX_HEIGHT);
 			normals[vertexPointer * 3] = normal.x;
 			normals[vertexPointer * 3 + 1] = normal.y;
 			normals[vertexPointer * 3 + 2] = normal.z;
@@ -156,9 +157,11 @@ void genTerrain(const char* heightMapFile, vector<string> textures, glm::mat4 mo
 		textureIds[i] = loadTexture(textures.at(i).c_str());
 
 	//load Terrain with data
-	newTerrain->load(vertices, indices, normals, uvs, modelMatrix, textureIds, heights);
+	newTerrain.load(vertices, indices, normals, uvs, modelMatrix, textureIds, heights);
 
 	stbi_image_free(data);
+
+	return newTerrain;
 }
 
 glm::vec3 calculateNormal(int i, int j, unsigned char* heightMap, int height, int nrChannels, float MAX_HEIGHT) {

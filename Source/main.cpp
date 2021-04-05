@@ -26,7 +26,7 @@
 
 #undef main
 
-// settings
+// Settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 const int FPS = 60;
@@ -36,7 +36,7 @@ const int frameDelay = 1000 / FPS;
 vector<Entity> entities;
 map<string, Entity*> players;
 string playerName;
-Model* playerModel;
+Model playerModel;
 glm::vec3 g_light = glm::vec3(250.0f, 1000.0f, 250.0f);
 
 // Camera
@@ -65,15 +65,14 @@ void generateEntities(Model* model, Terrain* terrain, int amount, float minScale
 
 // Creates new and updates existing players entities
 void updatePlayers(playerInfo data) {
-	// update player
+	// Update player
 	if (players.count(data.playerId)) {
 		Entity* player = players.at(data.playerId);
 		player->modelMatrix = glm::translate(glm::mat4(1), glm::vec3(data.modelMatrix.x, data.modelMatrix.y - camera.playerHeight, data.modelMatrix.z));
 		player->modelMatrix = glm::rotate(player->modelMatrix, glm::radians(-data.modelMatrix.w), glm::vec3(0, 1, 0));
 		player->modelMatrix = glm::scale(player->modelMatrix, glm::vec3(5.0f, 5.0f, 5.0f));
-
 	}
-	// create new player entity from cache in loader
+	// Create new player entity
 	else {
 		cout << "New Player joined server: " << data.playerId << endl;
 
@@ -81,8 +80,7 @@ void updatePlayers(playerInfo data) {
 		tempModelMatrix = glm::rotate(tempModelMatrix, glm::radians(-data.modelMatrix.w), glm::vec3(0, 1, 0));
 		tempModelMatrix = glm::scale(tempModelMatrix, glm::vec3(5.0f, 5.0f, 5.0f));
 
-
-		Entity* newPlayer = new Entity(playerModel, tempModelMatrix);
+		Entity* newPlayer = new Entity(&playerModel, tempModelMatrix);
 		players.insert(pair<string, Entity*>(data.playerId, newPlayer));
 
 		cout << "New Player spawned at: " << glm::to_string(data.modelMatrix) << endl;
@@ -108,6 +106,14 @@ void init() {
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
+
+// Cleans up SDL objects
+void cleanUp(SDL_Window* _window, SDL_GLContext _context) {
+	// Close window
+	SDL_Quit();
+	SDL_DestroyWindow(_window);
+	SDL_GL_DeleteContext(_context);
+}
 
 
 int main(int argc, char** argv)
@@ -136,8 +142,7 @@ int main(int argc, char** argv)
 		terrainPath + "Grass2.png", terrainPath + "Sand.png", terrainPath + "Rock.png" };
 	glm::mat4 terrainModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -4.0f, 0.0f));
 
-	Terrain terrain;
-	genTerrain((terrainPath + "smol_heightmap.png").c_str(), terrainTextures, terrainModelMatrix, &terrain, false);
+	Terrain terrain = genTerrain((terrainPath + "smol_heightmap.png").c_str(), terrainTextures, terrainModelMatrix, false);
 	
 	// Load Skybox
 	string skyboxPath = "./Engine/Models/Skybox/Day/";
@@ -149,11 +154,11 @@ int main(int argc, char** argv)
 
 	// Load models
 	printf("Loading Models...");
-	Model gs_inn = Model("./Engine/Models/Goldshirehouse/goldshireinn.obj");
-	Model tree1 = Model("./Engine/Models/Tree/Tree.obj");
-	Model tree2 = Model("./Engine/Models/Palm/10446_Palm_Tree_v1_max2010_iteration-2-small.obj");
-	Model grass = Model("./Engine/Models/Grass/grass.obj");
-	playerModel = new Model("./Engine/Models/Orc/orcmalescale.obj");
+	Model gs_inn("./Engine/Models/Goldshirehouse/goldshireinn.obj");
+	Model tree1("./Engine/Models/Tree/Tree.obj");
+	Model tree2("./Engine/Models/Palm/10446_Palm_Tree_v1_max2010_iteration-2-small.obj");
+	Model grass("./Engine/Models/Grass/grass.obj");
+	playerModel = Model("./Engine/Models/Orc/orcmalescale.obj");
 	printf("Done.\n");
 
 	// Placing Entities
@@ -166,7 +171,7 @@ int main(int argc, char** argv)
 	
 	glm::mat4 npc1_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(250, terrain.getHeightAt(250, 250) - 2.0f, 250));
 	npc1_matrix = glm::scale(npc1_matrix, glm::vec3(7.0f, 7.0f, 7.0f));
-	entities.push_back(Entity(playerModel, npc1_matrix));
+	entities.push_back(Entity(&playerModel, npc1_matrix));
 
 	generateEntities(&tree1, &terrain, 350, 15.0f);
 	generateEntities(&tree2, &terrain, 50, 5.0f);
@@ -183,9 +188,10 @@ int main(int argc, char** argv)
 	size_t idx = server.find(":");
 	string port = server.substr(idx + 1, server.size());
 	UDPClient netClient(server.substr(0, idx), port);
+	future<playerInfo> udpPromise;
 	if (netClient.connectedStatus) {
 		cout << "ConnectedStatus: " << netClient.connectedStatus << endl;
-		future<playerInfo> udpPromise = std::async(std::launch::async, &UDPClient::update, netClient, camera.getPosition(), camera.getAngles().y);
+		udpPromise = std::async(std::launch::async, &UDPClient::update, netClient, camera.getPosition(), camera.getAngles().y);
 	}
 	
 
@@ -275,9 +281,3 @@ int main(int argc, char** argv)
 	return 0;
 }
 
-void cleanUp(SDL_Window* _window, SDL_GLContext _context) {
-	// Close window
-	SDL_Quit();
-	SDL_DestroyWindow(_window);
-	SDL_GL_DeleteContext(_context);
-}
